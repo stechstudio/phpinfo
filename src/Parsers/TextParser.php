@@ -9,6 +9,12 @@ use STS\Phpinfo\Models\Module;
 
 class TextParser extends Info
 {
+    public static function canParse(string $contents): bool
+    {
+        return str_contains($contents, "phpinfo()\nPHP Version")
+            && count(explode("_______________________________________________________________________", $contents)) === 3;
+    }
+
     protected function parse(): void
     {
         // phpinfo() helpfully gives us this big line, separating the general info, modules, and credits/license

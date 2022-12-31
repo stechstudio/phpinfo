@@ -8,22 +8,25 @@ use DOMText;
 use DOMXPath;
 use Illuminate\Support\Collection;
 use STS\Phpinfo\Models\Config;
-use STS\Phpinfo\Models\General;
 use STS\Phpinfo\Models\Module;
 use STS\Phpinfo\Info;
 
 class HtmlParser extends Info
 {
+    protected DOMXpath $xpath;
+
+    public static function canParse(string $contents): bool
+    {
+        return str_contains($contents, 'phpinfo()</title>')
+            && str_contains($contents, '<h1 class="p">PHP Version ');
+    }
+
     protected function parse(): void
     {
-        $document = new DOMDocument;
-        $document->loadHTML(str_replace("\n", "", $this->contents));
-        $xpath = new DOMXpath($document);
-
-        $this->version = str_replace('PHP Version ', '', $xpath->query('//body//h1')[0]->nodeValue);
+        $this->version = str_replace('PHP Version ', '', $this->xpath()->query('//body//h1')[0]->nodeValue);
 
         // For modules, we start by looking at all <h2> tags
-        $this->modules = collect($xpath->query('//body//h2'))
+        $this->modules = collect($this->xpath()->query('//body//h2'))
             // Don't need the license in our collection
             ->reject(fn(DOMElement $heading) => $heading->nodeValue === 'PHP License')
             // Create the Module instance with all configs listed below the heading
@@ -33,7 +36,7 @@ class HtmlParser extends Info
 
         $this->modules->prepend(
             new Module('General',
-                collect($xpath->query('//body//table[2]/tr'))
+                collect($this->xpath()->query('//body//table[2]/tr'))
                     // We know that the general table rows only have two columns
                     ->map(fn(DOMElement $row) => new Config(
                         trim($row->firstChild->nodeValue), trim($row->lastChild->nodeValue)
@@ -75,5 +78,16 @@ class HtmlParser extends Info
         return collect($row->childNodes)
             ->reject(fn($node) => $node instanceof DOMText)
             ->map(fn(DOMElement $cell) => trim($cell->nodeValue));
+    }
+
+    protected function xpath(): DOMXPath
+    {
+        if(!isset($this->xpath)) {
+            $document = new DOMDocument;
+            $document->loadHTML(str_replace("\n", "", $this->contents));
+            $this->xpath = new DOMXpath($document);
+        }
+
+        return $this->xpath;
     }
 }
