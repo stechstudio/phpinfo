@@ -33,7 +33,7 @@ class HtmlParser extends Info
                 fn(Element $heading) => [strtolower($heading->text()) => new Module($heading->text(), $this->findConfigsFor($heading))]
             );
 
-        $this->configuration = $this->modules->map->configurations()->flatten()->keyBy(fn(Config $config) => strtolower($config->name()));
+        $this->configs = $this->modules->map->configs()->flatten()->keyBy(fn(Config $config) => strtolower($config->name()));
     }
 
     protected function findConfigsFor(Element $heading): Collection
@@ -46,11 +46,16 @@ class HtmlParser extends Info
 
             $configs->push(
                 collect($current->children())
-                    ->map(fn(Element $row) => Config::parse($row))
+                    ->map(fn(Element $row) => Config::fromValues($this->rowToValues($row)))
                     ->reject(fn(Config $config) => in_array($config->name(), ['Directive','Variable']))
             );
         }
 
         return $configs->flatten()->keyBy(fn(Config $setting) => strtolower($setting->name()));
+    }
+
+    protected function rowToValues(Element $row): Collection
+    {
+        return collect($row->children())->map(fn($cell) => trim($cell->text()));
     }
 }

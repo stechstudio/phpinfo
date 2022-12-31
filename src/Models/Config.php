@@ -3,6 +3,7 @@
 namespace STS\Phpinfo\Models;
 
 use DiDom\Element;
+use Illuminate\Support\Collection;
 
 class Config
 {
@@ -13,10 +14,8 @@ class Config
     )
     {}
 
-    public static function parse(Element $row)
+    public static function fromValues(Collection $values)
     {
-        $values = collect($row->children())->map(fn($cell) => trim($cell->text()));
-
         return new static(
             $values->get(0),
             $values->get(1)  === "no value" ? null : $values->get(1),

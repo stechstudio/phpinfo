@@ -8,7 +8,7 @@ class Module
 {
     public function __construct(
         protected string $name,
-        protected Collection $configuration
+        protected Collection $configs
     )
     {}
 
@@ -17,18 +17,18 @@ class Module
         return $this->name;
     }
 
-    public function configurations(): Collection
+    public function configs(): Collection
     {
-        return $this->configuration;
+        return $this->configs;
     }
 
     public function hasConfig($key): bool
     {
-        return $this->configuration->has(strtolower($key));
+        return $this->configs->has(strtolower($key));
     }
 
     public function config($key, $which = "local"): string|null
     {
-        return $this->configuration->get($key)?->value($which);
+        return $this->configs->get($key)?->value($which);
     }
 }

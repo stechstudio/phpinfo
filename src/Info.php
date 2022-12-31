@@ -13,7 +13,7 @@ abstract class Info
     protected string $version;
     protected General $general;
     protected Collection $modules;
-    protected Collection $configuration;
+    protected Collection $configs;
 
     public function __construct(protected string $contents)
     {
@@ -63,19 +63,9 @@ abstract class Info
         return $this->modules->has(strtolower($key));
     }
 
-    public function hasConfig($key): bool
-    {
-        return $this->configuration->has(strtolower($key));
-    }
-
     public function module($key): Module|null
     {
         return $this->modules->get($key);
-    }
-
-    public function config($key, $which = "local"): string|null
-    {
-        return $this->configuration->get($key)?->value($which);
     }
 
     public function modules(): Collection
@@ -83,8 +73,18 @@ abstract class Info
         return $this->modules;
     }
 
-    public function configurations(): Collection
+    public function hasConfig($key): bool
     {
-        return $this->configuration;
+        return $this->configs->has(strtolower($key));
+    }
+
+    public function config($key, $which = "local"): string|null
+    {
+        return $this->configs->get($key)?->value($which);
+    }
+
+    public function configs(): Collection
+    {
+        return $this->configs;
     }
 }

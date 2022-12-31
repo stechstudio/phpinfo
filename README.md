@@ -4,7 +4,7 @@ This package will get the output from `phpinfo()` and provide it to you as a use
 
 ## Installation
 
-```php
+```bash
 composer require stechstudio/phpinfo
 ```
 
@@ -16,6 +16,30 @@ To capture your current `phpinfo()` information and get started:
 use STS\Phpinfo\Info;
 
 $info = Info::capture();
+```
+
+### Iterating
+
+You can easily loop over your `phpinfo()` configuration. 
+
+```php
+// Loop over defined modules
+foreach($info->modules() AS $module) {
+    $module->name(); // session
+    
+    // Now loop over module configs
+    foreach($module->configurations() AS $config) {
+        $config->name(); // session.auto_start
+        $config->localValue(); // Off
+        $config->masterValue(); // Off
+    }
+}
+
+// You can loop over the general configs listed at the top of phpinfo()
+foreach($info->generals() AS $config) { ... }
+
+// Want a full list of all configs from all modules?
+foreach($info->configurations() AS $config) { ... }
 ```
 
 ### Looking up specific information
@@ -59,17 +83,6 @@ $module->config('Max keys'); // 16229
 $module->config('opcache.enable_file_override', 'master'); // Off
 ```
 
-### Iterating
-
-You can easily loop over your `phpinfo()` configuration. 
-
-```php
-$info->generals(); // Collection of all general PHP information
-$info->configurations(); // Collection of all configurations, across all modules
-$info->modules(); // Collection of all modules
-
-$module->configurations(); // Collection of configurations for this specific module
-```
 
 Here is a super simple example to display modules and configuration:
 
