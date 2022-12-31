@@ -35,9 +35,6 @@ foreach($info->modules() AS $module) {
     }
 }
 
-// You can loop over the general configs listed at the top of phpinfo()
-foreach($info->generals() AS $config) { ... }
-
 // Want a full list of all configs from all modules?
 foreach($info->configs() AS $config) { ... }
 ```
@@ -49,9 +46,6 @@ There are several methods to help with finding specific information such as modu
 ```php
 // Your PHP version
 $info->version(); // 8.1.1
-
-// Any of the general information at the top of phpinfo()
-$info->general('Loaded Configuration File'); // /opt/homebrew/etc/php/8.1/php.ini
 
 // Check if a module is present. Name is case-insensitive.
 $info->hasModule('phar'); // true
@@ -70,6 +64,8 @@ $info->config('BCMath support', 'master'); // null
 ### Modules
 
 You can look up a specific module if you want to interact with it directly.
+
+The general information at the top of `phpinfo()` is stored as the "General" module.
 
 ```php
 // This lookup is case-insensitive. Will return null if no matching module is found.

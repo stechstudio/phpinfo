@@ -5,7 +5,6 @@ namespace STS\Phpinfo\Parsers;
 use Illuminate\Support\Collection;
 use STS\Phpinfo\Info;
 use STS\Phpinfo\Models\Config;
-use STS\Phpinfo\Models\General;
 use STS\Phpinfo\Models\Module;
 
 class TextParser extends Info
@@ -15,8 +14,8 @@ class TextParser extends Info
         // phpinfo() helpfully gives us this big line, separating the general info, modules, and credits/license
         [$general, $modules, $credits] = explode("_______________________________________________________________________", $this->contents);
 
-        $this->parseGeneral($general);
         $this->parseModules($modules);
+        $this->parseGeneral($general);
     }
 
     protected function parseGeneral($contents): void
@@ -25,13 +24,17 @@ class TextParser extends Info
 
         $this->version = $this->lineToValues($lines[1])->get(1);
 
-        $this->general = General::make(array_slice($lines, 3))
-            // We only care about key/value pairs
-            ->filter(fn($line) => str_contains($line, " => "))
-            // Parse out the key/value and create a Config instance
-            ->map(fn($line) => Config::fromValues($this->lineToValues($line)))
-            // Key by lowercase name for easy lookups
-            ->keyBy(fn(Config $config) => strtolower($config->name()));
+        $this->modules->prepend(
+            new Module('General',
+                collect(array_slice($lines, 3))
+                    // We only care about key/value pairs
+                    ->filter(fn($line) => str_contains($line, " => "))
+                    // Parse out the key/value and create a Config instance
+                    ->map(fn($line) => Config::fromValues($this->lineToValues($line)))
+                    // Key by lowercase name for easy lookups
+                    ->keyBy(fn(Config $config) => strtolower($config->name()))
+            ), 'general'
+        );
     }
 
     protected function parseModules($contents)
@@ -59,11 +62,6 @@ class TextParser extends Info
             ))
             // Key by lowercase name for easy lookups
             ->keyBy(fn(Module $module) => strtolower($module->name()));
-
-        // Gather all the module configs as one flat collection
-        $this->configs = $this->modules->map->configs()
-            ->flatten()
-            ->keyBy(fn(Config $config) => strtolower($config->name()));
     }
 
     protected function lineToValues($line): Collection

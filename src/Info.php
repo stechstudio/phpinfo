@@ -3,6 +3,7 @@
 namespace STS\Phpinfo;
 
 use Illuminate\Support\Collection;
+use STS\Phpinfo\Models\Config;
 use STS\Phpinfo\Models\General;
 use STS\Phpinfo\Models\Module;
 use STS\Phpinfo\Parsers\HtmlParser;
@@ -18,6 +19,11 @@ abstract class Info
     public function __construct(protected string $contents)
     {
         $this->parse();
+
+        // Gather all the module configs as one flat collection
+        $this->configs = $this->modules->map->configs()
+            ->flatten()
+            ->keyBy(fn(Config $config) => strtolower($config->name()));
     }
 
     public static function capture(): static
@@ -48,16 +54,6 @@ abstract class Info
         return $this->version;
     }
 
-    public function general($key): string
-    {
-        return $this->general->get($key)?->value();
-    }
-
-    public function generals(): Collection
-    {
-        return $this->general;
-    }
-
     public function hasModule($key): bool
     {
         return $this->modules->has(strtolower($key));
@@ -65,7 +61,7 @@ abstract class Info
 
     public function module($key): Module|null
     {
-        return $this->modules->get($key);
+        return $this->modules->get(strtolower($key));
     }
 
     public function modules(): Collection
@@ -80,7 +76,7 @@ abstract class Info
 
     public function config($key, $which = "local"): string|null
     {
-        return $this->configs->get($key)?->value($which);
+        return $this->configs->get(strtolower($key))?->value($which);
     }
 
     public function configs(): Collection

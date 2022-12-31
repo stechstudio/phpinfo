@@ -22,16 +22,6 @@ class HtmlParser extends Info
 
         $this->version = str_replace('PHP Version ', '', $xpath->query('//body//h1')[0]->nodeValue);
 
-        $this->general = new General(
-            collect($xpath->query('//body//table[2]/tr'))
-                // We know that the general table rows only have two columns
-                ->map(fn(DOMElement $row) => new Config(
-                    trim($row->firstChild->nodeValue), trim($row->lastChild->nodeValue)
-                ))
-                // Key by lowercase name for easy lookups
-                ->keyBy(fn(Config $config) => strtolower($config->name()))
-        );
-
         // For modules, we start by looking at all <h2> tags
         $this->modules = collect($xpath->query('//body//h2'))
             // Don't need the license in our collection
@@ -41,10 +31,17 @@ class HtmlParser extends Info
             // Key by lowercase name for easy lookups
             ->keyBy(fn(Module $module) => strtolower($module->name()));
 
-        // Gather all the module configs as one flat collection
-        $this->configs = $this->modules->map->configs()
-            ->flatten()
-            ->keyBy(fn(Config $config) => strtolower($config->name()));
+        $this->modules->prepend(
+            new Module('General',
+                collect($xpath->query('//body//table[2]/tr'))
+                    // We know that the general table rows only have two columns
+                    ->map(fn(DOMElement $row) => new Config(
+                        trim($row->firstChild->nodeValue), trim($row->lastChild->nodeValue)
+                    ))
+                    // Key by lowercase name for easy lookups
+                    ->keyBy(fn(Config $config) => strtolower($config->name()))
+            ), 'general'
+        );
     }
 
     protected function findConfigsFor(DOMElement $heading): Collection
