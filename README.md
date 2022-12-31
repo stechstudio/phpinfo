@@ -28,7 +28,7 @@ foreach($info->modules() AS $module) {
     $module->name(); // session
     
     // Now loop over module configs
-    foreach($module->configurations() AS $config) {
+    foreach($module->configs() AS $config) {
         $config->name(); // session.auto_start
         $config->localValue(); // Off
         $config->masterValue(); // Off
@@ -39,7 +39,7 @@ foreach($info->modules() AS $module) {
 foreach($info->generals() AS $config) { ... }
 
 // Want a full list of all configs from all modules?
-foreach($info->configurations() AS $config) { ... }
+foreach($info->configs() AS $config) { ... }
 ```
 
 ### Looking up specific information
@@ -91,7 +91,7 @@ foreach ($info->modules() AS $module) {
     echo '<h2>' . $module->name() . '</h2>';
 
     echo '<ul>';
-    foreach($module->configuration() AS $config) {
+    foreach($module->configs() AS $config) {
         echo '<li>';
         echo $config->name() . ': ' . $config->value();
         if($config->hasMasterValue()) {

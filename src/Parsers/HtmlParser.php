@@ -2,8 +2,10 @@
 
 namespace STS\Phpinfo\Parsers;
 
-use DiDom\Document;
-use DiDom\Element;
+use DOMDocument;
+use DOMElement;
+use DOMText;
+use DOMXPath;
 use Illuminate\Support\Collection;
 use STS\Phpinfo\Models\Config;
 use STS\Phpinfo\Models\General;
@@ -14,39 +16,43 @@ class HtmlParser extends Info
 {
     protected function parse(): void
     {
-        $document = new Document(str_replace("\n", "", $this->contents));
+        $document = new DOMDocument;
+        $document->loadHTML(str_replace("\n", "", $this->contents));
+        $xpath = new DOMXpath($document);
 
-        $this->version = str_replace('PHP Version ', '', $document->find('h1')[0]->text());
+        $this->version = str_replace('PHP Version ', '', $xpath->query('//body//h1')[0]->nodeValue);
 
         $this->general = new General(
-            collect($document->xpath('//body//table[2]/tr'))
+            collect($xpath->query('//body//table[2]/tr'))
                 ->map(
-                    fn(Element $row) => new Config(
-                        trim($row->firstChild()->text()), trim($row->lastChild()->text())
+                    fn(DOMElement $row) => new Config(
+                        trim($row->firstChild->nodeValue), trim($row->lastChild->nodeValue)
                     )
                 )->keyBy(fn(Config $config) => strtolower($config->name()))
         );
 
-        $this->modules = collect($document->find('h2'))
-            ->reject(fn(Element $heading) => $heading->text() === 'PHP License')
-            ->mapWithKeys(
-                fn(Element $heading) => [strtolower($heading->text()) => new Module($heading->text(), $this->findConfigsFor($heading))]
-            );
+        $this->modules = collect($xpath->query('//body//h2'))
+            ->reject(fn(DOMElement $heading) => $heading->nodeValue === 'PHP License')
+            ->mapWithKeys(fn(DOMElement $heading) => [
+                strtolower($heading->nodeValue) => new Module($heading->nodeValue, $this->findConfigsFor($heading))
+            ]);
 
         $this->configs = $this->modules->map->configs()->flatten()->keyBy(fn(Config $config) => strtolower($config->name()));
     }
 
-    protected function findConfigsFor(Element $heading): Collection
+    protected function findConfigsFor(DOMElement $heading): Collection
     {
         $configs = collect();
         $current = $heading;
 
-        while ($current->nextSibling()?->tagName() === "table") {
-            $current = $current->nextSibling();
+        while ($current->nextSibling->nodeName === "table") {
+            $current = $current->nextSibling;
 
             $configs->push(
-                collect($current->children())
-                    ->map(fn(Element $row) => Config::fromValues($this->rowToValues($row)))
+                collect($current->childNodes)
+                    ->filter(fn($node) => $node instanceof DOMElement && $node->nodeName === "tr")
+                    ->map(fn(DOMElement $row) => $this->rowToValues($row))
+                    ->map(fn(Collection $values) => Config::fromValues($values))
                     ->reject(fn(Config $config) => in_array($config->name(), ['Directive','Variable']))
             );
         }
@@ -54,8 +60,10 @@ class HtmlParser extends Info
         return $configs->flatten()->keyBy(fn(Config $setting) => strtolower($setting->name()));
     }
 
-    protected function rowToValues(Element $row): Collection
+    protected function rowToValues(DOMElement $row): Collection
     {
-        return collect($row->children())->map(fn($cell) => trim($cell->text()));
+        return collect($row->childNodes)
+            ->reject(fn($node) => $node instanceof DOMText)
+            ->map(fn(DOMElement $cell) => trim($cell->nodeValue));
     }
 }
