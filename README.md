@@ -98,3 +98,17 @@ foreach ($info->modules() AS $module) {
     echo '</ul>';
 }
 ```
+
+If you want to display single-value configs separate from multi-value configs (local & master values) similar to the default `phpinfo()` output, you can use `singleValueConfigs()` and `multiValueConfigs()` respectively.
+
+```php
+$module = $info->module('odbc');
+
+foreach($module->singleValueConfigs() AS $config) {
+    echo $config->name() . ': ' . $config->value();
+}
+
+foreach($module->multiValueConfigs() AS $config) {
+    echo $config->name() . ': ' . $config->localValue() . ' (master: ' . $config->masterValue() . ')';
+}
+```

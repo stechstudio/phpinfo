@@ -17,11 +17,6 @@ class Module
         return $this->name;
     }
 
-    public function configs(): Collection
-    {
-        return $this->configs;
-    }
-
     public function hasConfig($key): bool
     {
         return $this->configs->has(strtolower($key));
@@ -30,5 +25,20 @@ class Module
     public function config($key, $which = "local"): string|null
     {
         return $this->configs->get($key)?->value($which);
+    }
+
+    public function configs(): Collection
+    {
+        return $this->configs;
+    }
+
+    public function singleValueConfigs(): Collection
+    {
+        return $this->configs->reject->hasMasterValue();
+    }
+
+    public function multiValueConfigs(): Collection
+    {
+        return $this->configs->filter->hasMasterValue();
     }
 }
