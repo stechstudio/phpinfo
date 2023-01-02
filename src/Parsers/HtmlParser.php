@@ -8,6 +8,7 @@ use DOMText;
 use DOMXPath;
 use Illuminate\Support\Collection;
 use STS\Phpinfo\Models\Config;
+use STS\Phpinfo\Models\Group;
 use STS\Phpinfo\Models\Module;
 use STS\Phpinfo\Info;
 
@@ -30,47 +31,54 @@ class HtmlParser extends Info
             // Don't need the license in our collection
             ->reject(fn(DOMElement $heading) => $heading->nodeValue === 'PHP License')
             // Create the Module instance with all configs listed below the heading
-            ->map(fn(DOMElement $heading) => new Module($heading->nodeValue, $this->findConfigsFor($heading)))
+            ->map(fn(DOMElement $heading) => new Module($heading->nodeValue, $this->findGroupedConfigsFor($heading)))
             // Key by lowercase name for easy lookups
             ->keyBy(fn(Module $module) => strtolower($module->name()));
 
         $this->modules->prepend(
-            new Module('General',
-                collect($this->xpath()->query('//body//table[2]/tr'))
+            new Module('General', collect([
+                new Group(
+                    collect($this->xpath()->query('//body//table[2]/tr'))
                     // We know that the general table rows only have two columns
                     ->map(fn(DOMElement $row) => new Config(
                         trim($row->firstChild->nodeValue), trim($row->lastChild->nodeValue)
                     ))
-                    // Key by lowercase name for easy lookups
-                    ->keyBy(fn(Config $config) => strtolower($config->name()))
-            ), 'general'
+                )
+            ])), 'general'
         );
     }
 
-    protected function findConfigsFor(DOMElement $heading): Collection
+    protected function findGroupedConfigsFor(DOMElement $heading): Collection
     {
-        $configs = collect();
+        $groups = collect();
         $current = $heading;
 
         // Modules often have multiple tables, we need to keep looking at siblings until it's no longer a table
         while ($current->nextSibling->nodeName === "table") {
             $current = $current->nextSibling;
 
-            $configs->push(
-                collect($current->childNodes)
-                    // We only want <tr> nodes
-                    ->filter(fn($node) => $node instanceof DOMElement && $node->nodeName === "tr" && $node->childNodes->length > 1)
-                    // Get rid of header rows
-                    ->reject(fn(DOMElement $node) => in_array($node->firstChild->nodeValue, ['Directive', 'Variable']))
-                    // Parse out the field values
-                    ->map(fn(DOMElement $row) => $this->rowToValues($row))
-                    // And turn into a Config object
-                    ->map(fn(Collection $values) => Config::fromValues($values))
+            // See if this table has a header row
+            $headings = in_array($current->childNodes[0]->firstChild->nodeValue, ['Directive', 'Variable'])
+                ? collect($current->childNodes[0]->childNodes)->map->nodeValue
+                : collect();
+
+            $groups->push(
+                new Group(
+                    collect($current->childNodes)
+                        // We only want <tr> nodes
+                        ->filter(fn($node) => $node instanceof DOMElement && $node->nodeName === "tr" && $node->childNodes->length > 1)
+                        // Get rid of header rows
+                        ->reject(fn(DOMElement $node) => in_array($node->firstChild->nodeValue, ['Directive', 'Variable']))
+                        // Parse out the field values
+                        ->map(fn(DOMElement $row) => $this->rowToValues($row))
+                        // And turn into a Config object
+                        ->map(fn(Collection $values) => Config::fromValues($values)),
+                    $headings
+                )
             );
         }
 
-        // We'll flatten our table configs, and key by lowercase name for easy lookups
-        return $configs->flatten()->keyBy(fn(Config $setting) => strtolower($setting->name()));
+        return $groups;
     }
 
     protected function rowToValues(DOMElement $row): Collection

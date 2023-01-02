@@ -2,10 +2,10 @@
 
 namespace STS\Phpinfo\Models;
 
-use DiDom\Element;
 use Illuminate\Support\Collection;
+use JsonSerializable;
 
-class Config
+class Config implements JsonSerializable
 {
     public function __construct(
         protected string $name,
@@ -23,7 +23,12 @@ class Config
         );
     }
 
-    public function name()
+    public function key(): string
+    {
+        return strtolower($this->name);
+    }
+
+    public function name(): string
     {
         return $this->name;
     }
@@ -53,5 +58,16 @@ class Config
     public function __toString()
     {
         return (string) $this->value();
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            "key" => $this->key(),
+            "name" => $this->name(),
+            "hasMasterValue" => $this->hasMasterValue(),
+            "localValue" => $this->localValue(),
+            "masterValue" => $this->masterValue(),
+        ];
     }
 }

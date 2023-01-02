@@ -4,12 +4,13 @@ namespace STS\Phpinfo;
 
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
+use JsonSerializable;
 use STS\Phpinfo\Models\Config;
 use STS\Phpinfo\Models\Module;
 use STS\Phpinfo\Parsers\HtmlParser;
 use STS\Phpinfo\Parsers\TextParser;
 
-abstract class Info
+abstract class Info implements JsonSerializable
 {
     protected string $version;
     protected Collection $modules;
@@ -95,5 +96,14 @@ abstract class Info
     public function configs(): Collection
     {
         return $this->configs;
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            'version' => $this->version(),
+            'modules' => $this->modules()->values(),
+            'configs' => $this->configs()->values(),
+        ];
     }
 }
