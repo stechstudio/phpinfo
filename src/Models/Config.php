@@ -63,7 +63,7 @@ class Config implements JsonSerializable
         return (string) $this->value();
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             "key" => $this->key(),

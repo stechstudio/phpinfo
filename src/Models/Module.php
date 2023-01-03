@@ -50,10 +50,10 @@ class Module implements JsonSerializable
 
     public function configs(): Collection
     {
-        return $this->groups->flatMap->configs();
+        return $this->groups()->flatMap->configs();
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             "key" => $this->key(),

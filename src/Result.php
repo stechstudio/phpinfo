@@ -85,7 +85,7 @@ abstract class Result implements JsonSerializable
         include(__DIR__ . "/../dist/default.php");
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'version' => $this->version(),

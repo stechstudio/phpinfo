@@ -4,6 +4,7 @@ namespace STS\Phpinfo\Parsers;
 
 use Illuminate\Support\Collection;
 use STS\Phpinfo\Models\Config;
+use STS\Phpinfo\Models\Group;
 use STS\Phpinfo\Models\Module;
 use STS\Phpinfo\Result;
 
@@ -31,15 +32,15 @@ class TextParser extends Result
         $this->version = $this->lineToValues($lines[1])->get(1);
 
         $this->modules->prepend(
-            new Module('General',
-                collect(array_slice($lines, 3))
+            new Module('General', collect([
+                new Group(
+                    collect(array_slice($lines, 3))
                     // We only care about key/value pairs
                     ->filter(fn($line) => str_contains($line, " => "))
                     // Parse out the key/value and create a Config instance
                     ->map(fn($line) => Config::fromValues($this->lineToValues($line)))
-                    // Key by lowercase name for easy lookups
-                    ->keyBy(fn(Config $config) => strtolower($config->name()))
-            ), 'general'
+                )
+            ]))
         );
     }
 
@@ -58,16 +59,36 @@ class TextParser extends Result
             // Get lines, and filter out empty strings
             ->map(fn($text) => collect(explode("\n", $text))->filter())
             // Each array of lines will start with the module name, and then the configs
-            ->map(fn($items) => new Module(
-                $items->shift(),
-                $items
-                    // Get rid of notes, or anything that isn't config key/value(s)
-                    ->filter(fn($line) => str_contains($line, "="))
-                    // Now parse out our key/value(s) and create the Config
-                    ->map(fn($line) => Config::fromValues($this->lineToValues($line)))
-            ))
-            // Key by lowercase name for easy lookups
-            ->keyBy(fn(Module $module) => strtolower($module->name()));
+            ->map(fn($lines) => new Module(
+                $lines->shift(),
+                $this->splitIntoGroups($lines)
+            ));
+    }
+
+    protected function splitIntoGroups(Collection $lines): Collection
+    {
+        return $lines
+            ->map(fn($line) => $this->lineToValues($line))
+            // Break our lines into groups based on how many variables they have
+            ->partition(fn(Collection $values) => $values->count() === 2)
+            // Sometimes we get a partitioned group that is empty, get ride of those
+            ->filter(fn(Collection $groupedValues) => $groupedValues->count())
+            // Now turn our grouped values into Group instances
+            ->map(fn(Collection $groupedValues) => $this->buildGroup($groupedValues));
+    }
+
+    protected function buildGroup(Collection $lines): Group
+    {
+        $headings = in_array($lines->first()->first(), ['Directive', 'Variable'])
+            ? $lines->first()
+            : collect();
+
+        return new Group(
+            $lines
+                ->reject(fn(Collection $values) => in_array($values->first(), ['Directive', 'Variable']))
+                ->map(fn(Collection $values) => Config::fromValues($values)),
+            $headings
+        );
     }
 
     protected function lineToValues($line): Collection
