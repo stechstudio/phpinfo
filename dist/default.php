@@ -25,8 +25,8 @@
 </head>
 
 <body class="antialiased font-sans">
-<div class="h-screen overflow-hidden flex flex-col bg-gray-100" x-data='Navigation'>
-    <header class="flex items-center justify-between shadow py-4 px-6 bg-white z-10">
+<div class="" x-data='Navigation'>
+    <header class="fixed top-0 w-full flex items-center justify-between shadow py-4 px-6 xl:px-8 bg-white z-10">
         <div>
             <h1 class="text-xl md:text-2xl font-semibold">PHP v<?php echo $info->version() ?></h1>
             <div class="text-sm text-gray-500"><?php echo $info->config('hostname') ?></div>
@@ -42,9 +42,9 @@
         </div>
     </header>
 
-    <div class="flex-1 overflow-y-auto">
+    <div class="fixed w-full top-20 md:mt-1 bottom-0 overflow-y-auto bg-gray-100">
         <div class="flex-1 flex max-w-[96rem] mx-auto">
-            <aside class="fixed top-20 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 xl:w-64 pl-0.5 py-8 pr-4 xl:pr-8 space-y-px scroll-py-8">
+            <aside class="fixed top-20 mt-1 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 xl:w-64 py-8 px-4 lg:px-6 xl:px-8 space-y-px scroll-py-8">
                 <?php foreach ($info->modules() as $index => $module) { ?>
                     <a id="nav_<?php echo $module->key() ?>" @click=jump(<?php echo $index ?>) href="#<?php echo $module->key() ?>" class="px-4 py-1 rounded block"
                        :class="selected == '<?php echo $module->key() ?>' ? 'bg-gray-200' : 'hover:bg-white'"
@@ -52,7 +52,7 @@
                 <?php } ?>
             </aside>
 
-            <article class="flex-1 space-y-8 md:ml-52 lg:ml-60 xl:ml-72 py-8 px-4">
+            <article class="space-y-8 md:ml-52 lg:ml-60 xl:ml-72 py-8 px-4 md:pl-0">
                 <?php foreach ($info->modules() as $index => $module) { ?>
                     <section x-intersect:enter.margin.-100px="enter(<?php echo $index ?>)"
                              x-intersect:leave.margin.-100px="leave(<?php echo $index ?>)"
