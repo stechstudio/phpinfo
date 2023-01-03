@@ -15,7 +15,7 @@
 
 <body class="antialiased font-sans bg-gray-100">
 <div class="page-wrapper" x-data='Navigation'>
-    <header class="sticky top-0 flex items-center justify-between shadow py-4 px-6 bg-white">
+    <header class="sticky top-0 flex items-center justify-between shadow py-4 px-6 bg-white z-10">
         <div>
             <h1 class="text-xl lg:text-2xl font-semibold">PHP v<?php echo $info->version() ?></h1>
             <div class="text-sm text-gray-500"><?php echo $info->config('System') ?></div>
@@ -26,9 +26,9 @@
 
     <div class="max-w-7xl mx-auto my-8 px-4">
         <div class="md:flex">
-            <aside class="fixed top-32 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 pr-8 space-y-px">
+            <aside class="fixed top-20 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 py-8 pr-4 space-y-px scroll-py-8">
                 <?php foreach ($info->modules() as $index => $module) { ?>
-                    <a @click=jump(<?php echo $index ?>) href="javascript:;" class="px-4 py-1 rounded block"
+                    <a id="nav_<?php echo $module->key() ?>" @click=jump(<?php echo $index ?>) href="#<?php echo $module->key() ?>" class="px-4 py-1 rounded block"
                        :class="selected == '<?php echo $module->key() ?>' ? 'bg-gray-200' : 'hover:bg-white'"
                        @click="select('<?php echo $module->key() ?>')"><?php echo $module->name() ?></a>
                 <?php } ?>
@@ -40,7 +40,7 @@
                              x-intersect:leave.margin.-100px="leave(<?php echo $index ?>)"
                              class="space-y-4 lg:space-y-8 scroll-mt-32" id="<?php echo $module->key() ?>">
                         <h2 class="text-xl font-medium">
-                            <a href="#<?php echo $module->key() ?>">
+                            <a href="#<?php echo $module->key() ?>" @click=jump(<?php echo $index ?>) >
                                 <?php echo $module->name() ?>
                             </a>
                         </h2>
@@ -103,45 +103,44 @@
             selectedIndex: null,
             initialized: false,
             init() {
-                if (window.location.hash != '') {
-                    this.selectModule(window.location.hash.replace("#", ""));
-                } else {
-                    this.selectModule(this.firstModuleVisible());
-                }
+                this.selectModule(this.firstModuleVisible());
 
-                setTimeout(() => this.initialized = true, 100);
-            }
-            ,
+                setTimeout(() => {
+                    document.querySelector(`#nav_${this.selected}`).scrollIntoView({block: "center"});
+                    this.initialized = true;
+                }, 100);
+            },
             firstModuleVisible() {
                 return Array.from(document.querySelectorAll('section')).filter((section) =>
                     section.getBoundingClientRect().bottom > 100
                 )[0].id;
-            }
-            ,
+            },
             enter(index) {
-                if (this.initialized && this.selectedIndex == null || index < this.selectedIndex) {
+                if (this.initialized && (this.selectedIndex == null || index < this.selectedIndex || this.selectedNoLongerVisible())) {
                     this.select(index);
                 }
-            }
-            ,
+            },
             leave(index) {
-                if (this.initialized && this.selectedIndex == null || this.selectedIndex == index) {
+                if (this.initialized && (this.selectedIndex == null || this.selectedIndex == index || this.selectedNoLongerVisible())) {
                     this.select(++index);
                 }
-            }
-            ,
+            },
             jump(index) {
                 this.select(index);
-                window.location.hash = "#" + this.modules[index];
-            }
-            ,
+            },
             select(index) {
                 this.selectedIndex = index;
                 this.selected = this.modules[index];
-            }
-            ,
+                this.scrollIntoView();
+            },
             selectModule(key) {
                 this.select(this.modules.indexOf(key));
+            },
+            selectedNoLongerVisible() {
+                return document.querySelector("#" + this.selected).getBoundingClientRect().bottom < 100;
+            },
+            scrollIntoView() {
+                document.querySelector(`#nav_${this.selected}`).scrollIntoView({block: "nearest"});
             }
         }))
     });
