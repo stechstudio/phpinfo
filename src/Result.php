@@ -9,9 +9,12 @@ use STS\Phpinfo\Models\Config;
 use STS\Phpinfo\Models\Module;
 use STS\Phpinfo\Parsers\HtmlParser;
 use STS\Phpinfo\Parsers\TextParser;
+use STS\Phpinfo\Traits\ConfigAliases;
+use STS\Phpinfo\Traits\Slugifies;
 
 abstract class Result implements JsonSerializable
 {
+    use Slugifies, ConfigAliases;
 
     protected string $version;
     protected Collection $modules;
@@ -41,7 +44,8 @@ abstract class Result implements JsonSerializable
 
     public function module($key): Module|null
     {
-        return $this->modules->get(strtolower($key));
+        return $this->modules()
+            ->first(fn($module) => $module->key() === $this->slugify($key));
     }
 
     public function modules(): Collection
@@ -51,13 +55,19 @@ abstract class Result implements JsonSerializable
 
     public function hasConfig($key): bool
     {
-        return $this->configs()->has(strtolower($key));
+        return $this->configs()->first(fn($config) => $config->key() === $this->slugify($key)) !== null;
     }
 
     public function config($key, $which = "local"): string|null
     {
+        if(in_array($key, $this->aliases)) {
+            $aliasMethod = "get" . ucfirst($key);
+            return $this->$aliasMethod();
+        }
 
-        return $this->configs()->get(strtolower($key))?->value($which);
+        return $this->configs()
+            ->first(fn($config) => $config->key() === $this->slugify($key))
+            ?->value($which);
     }
 
     public function configs(): Collection

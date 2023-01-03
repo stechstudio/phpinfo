@@ -33,12 +33,14 @@ class Module implements JsonSerializable
 
     public function hasConfig($key): bool
     {
-        return $this->configs()->has(strtolower($key));
+        return $this->configs()->first(fn($config) => $config->key() === $this->slugify($key)) !== null;
     }
 
     public function config($key, $which = "local"): string|null
     {
-        return $this->configs()->get($key)?->value($which);
+        return $this->configs()
+            ->first(fn($config) => $config->key() === $this->slugify($key))
+            ?->value($which);
     }
 
     public function configs(): Collection
