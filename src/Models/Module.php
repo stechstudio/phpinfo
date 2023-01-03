@@ -4,9 +4,12 @@ namespace STS\Phpinfo\Models;
 
 use Illuminate\Support\Collection;
 use JsonSerializable;
+use STS\Phpinfo\Traits\Slugifies;
 
 class Module implements JsonSerializable
 {
+    use Slugifies;
+
     public function __construct(
         protected string $name,
         protected Collection $groups
@@ -15,7 +18,7 @@ class Module implements JsonSerializable
 
     public function key(): string
     {
-        return strtolower($this->name);
+        return $this->slugify($this->name);
     }
 
     public function name(): string

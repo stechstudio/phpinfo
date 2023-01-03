@@ -12,6 +12,7 @@ use STS\Phpinfo\Parsers\TextParser;
 
 abstract class Result implements JsonSerializable
 {
+
     protected string $version;
     protected Collection $modules;
     protected Collection $configs;
@@ -55,6 +56,7 @@ abstract class Result implements JsonSerializable
 
     public function config($key, $which = "local"): string|null
     {
+
         return $this->configs()->get(strtolower($key))?->value($which);
     }
 
