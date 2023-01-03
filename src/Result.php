@@ -82,7 +82,7 @@ abstract class Result implements JsonSerializable
     public function render()
     {
         $info = $this;
-        include(__DIR__ . "/resources/views/default.php");
+        include(__DIR__ . "/../dist/default.php");
     }
 
     public function jsonSerialize()
