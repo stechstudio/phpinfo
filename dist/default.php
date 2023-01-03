@@ -24,9 +24,9 @@
     </script>
 </head>
 
-<body class="antialiased font-sans bg-gray-100">
-<div class="page-wrapper" x-data='Navigation'>
-    <header class="sticky top-0 flex items-center justify-between shadow py-4 px-6 bg-white z-10">
+<body class="antialiased font-sans">
+<div class="h-screen overflow-hidden flex flex-col bg-gray-100" x-data='Navigation'>
+    <header class="flex items-center justify-between shadow py-4 px-6 bg-white z-10">
         <div>
             <h1 class="text-xl md:text-2xl font-semibold">PHP v<?php echo $info->version() ?></h1>
             <div class="text-sm text-gray-500"><?php echo $info->config('hostname') ?></div>
@@ -42,9 +42,9 @@
         </div>
     </header>
 
-    <div class="max-w-[96rem] mx-auto my-8 px-4">
-        <div class="md:flex">
-            <aside class="fixed top-20 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 xl:w-64 mt-1 pl-0.5 py-8 pr-4 xl:pr-8 space-y-px scroll-py-8">
+    <div class="flex-1 overflow-y-auto">
+        <div class="flex-1 flex max-w-[96rem] mx-auto">
+            <aside class="fixed top-20 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 xl:w-64 pl-0.5 py-8 pr-4 xl:pr-8 space-y-px scroll-py-8">
                 <?php foreach ($info->modules() as $index => $module) { ?>
                     <a id="nav_<?php echo $module->key() ?>" @click=jump(<?php echo $index ?>) href="#<?php echo $module->key() ?>" class="px-4 py-1 rounded block"
                        :class="selected == '<?php echo $module->key() ?>' ? 'bg-gray-200' : 'hover:bg-white'"
@@ -52,14 +52,17 @@
                 <?php } ?>
             </aside>
 
-            <article class="flex-grow md:ml-52 lg:ml-60 xl:ml-72 pt-2 space-y-8">
+            <article class="flex-1 space-y-8 md:ml-52 lg:ml-60 xl:ml-72 py-8 px-4">
                 <?php foreach ($info->modules() as $index => $module) { ?>
                     <section x-intersect:enter.margin.-100px="enter(<?php echo $index ?>)"
                              x-intersect:leave.margin.-100px="leave(<?php echo $index ?>)"
-                             class="space-y-4 lg:space-y-8 scroll-mt-32" id="<?php echo $module->key() ?>">
+                             class="space-y-4 lg:space-y-8  scroll-mt-8" id="<?php echo $module->key() ?>">
                         <h2 class="text-xl font-medium">
-                            <a href="#<?php echo $module->key() ?>" @click=jump(<?php echo $index ?>) >
+                            <a href="#<?php echo $module->key() ?>" @click="jump(<?php echo $index ?>)" class="group inline-flex items-center gap-2">
                                 <?php echo $module->name() ?>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-4 h-4 opacity-50">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                                </svg>
                             </a>
                         </h2>
 
@@ -68,21 +71,25 @@
                                 <table class="w-full text-sm">
                                     <?php if ($group->hasHeadings()) { ?>
                                         <tr class="hidden lg:table-row bg-gray-200 text-gray-900 font-semibold">
-                                            <td class="flex-shrink-0 py-2 px-4"><?php echo $group->heading(0) ?></td>
-                                            <td class="py-2 px-4"><?php echo $group->heading(1) ?></td>
+                                            <td class="flex-shrink-0 py-2 px-4"><?php echo $group->headings()->get(0) ?></td>
+                                            <td class="py-2 px-4"><?php echo $group->headings()->get(1) ?></td>
                                             <?php if ($group->headings()->count() === 3) { ?>
-                                                <td class="py-2 px-4"><?php echo $group->heading(2) ?></td>
+                                                <td class="py-2 px-4"><?php echo $group->headings()->get(2) ?></td>
                                             <?php } ?>
                                         </tr>
                                     <?php } ?>
                                     <tbody class="divide-y divide-gray-200 ">
-                                    <?php foreach ($group->configs() as $config) { ?>
+                                    <?php foreach ($group->configs() as $index => $config) { ?>
                                         <tr class="flex flex-col py-2 lg:py-0 lg:table-row"
                                             :class="hash == '<?php echo $module->combinedKeyFor($config) ?>' && 'bg-yellow-100'">
                                             <td class="lg:w-1/4 flex-shrink-0 align-top py-2 lg:py-4 pl-4 font-semibold text-gray-500">
                                                 <a id="<?php echo $module->combinedKeyFor($config) ?>" href="#<?php echo $module->combinedKeyFor($config) ?>"
-                                                   class="hover:text-black inline-block scroll-mt-28 active:ring-1 active:ring-indigo-500">
+                                                   class="inline-flex items-center gap-2 group hover:text-black inline-block active:ring-1 active:ring-indigo-500 scroll-mt-8">
                                                     <?php echo $config->name() ?>
+
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-3 h-3  opacity-50">
+                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                                                    </svg>
                                                 </a>
                                             </td>
                                             <td class="py-2 lg:py-4 px-4 <?php echo $config->localValue() === null ? 'text-gray-400 italic' : 'text-gray-900' ?>"
@@ -115,7 +122,7 @@
 
     <div x-cloak x-transition.opacity x-show="mobileNav" class="fixed inset-0 overflow-hidden bg-gray-900/50 backdrop-blur-sm z-20">
         <div x-show="mobileNav" @click.away="hideMobileNav()" class="fixed top-0 bottom-0 right-0 w-80 bg-gray-800 z-30">
-            <nav class="absolute inset-0 overflow-y-auto p-6 pt-12 space-y-px scroll-py-8 text-white">
+            <nav class="absolute inset-0 overflow-y-auto p-6 pt-12 space-y-px text-white">
                 <?php foreach ($info->modules() as $index => $module) { ?>
                     <a id="mobile_nav_<?php echo $module->key() ?>" href="#<?php echo $module->key() ?>" @click="hideMobileNav()" class="px-4 py-1 rounded block"
                        :class="selected == '<?php echo $module->key() ?>' ? 'bg-gray-600' : ''"
