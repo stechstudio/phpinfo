@@ -10,9 +10,9 @@ use Illuminate\Support\Collection;
 use STS\Phpinfo\Models\Config;
 use STS\Phpinfo\Models\Group;
 use STS\Phpinfo\Models\Module;
-use STS\Phpinfo\Info;
+use STS\Phpinfo\Result;
 
-class HtmlParser extends Info
+class HtmlParser extends Result
 {
     protected DOMXpath $xpath;
 
@@ -31,9 +31,7 @@ class HtmlParser extends Info
             // Don't need the license in our collection
             ->reject(fn(DOMElement $heading) => $heading->nodeValue === 'PHP License')
             // Create the Module instance with all configs listed below the heading
-            ->map(fn(DOMElement $heading) => new Module($heading->nodeValue, $this->findGroupedConfigsFor($heading)))
-            // Key by lowercase name for easy lookups
-            ->keyBy(fn(Module $module) => strtolower($module->name()));
+            ->map(fn(DOMElement $heading) => new Module($heading->nodeValue, $this->findGroupedConfigsFor($heading)));
 
         $this->modules->prepend(
             new Module('General', collect([
@@ -44,7 +42,7 @@ class HtmlParser extends Info
                         trim($row->firstChild->nodeValue), trim($row->lastChild->nodeValue)
                     ))
                 )
-            ])), 'general'
+            ]))
         );
     }
 

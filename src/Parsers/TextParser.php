@@ -3,11 +3,11 @@
 namespace STS\Phpinfo\Parsers;
 
 use Illuminate\Support\Collection;
-use STS\Phpinfo\Info;
 use STS\Phpinfo\Models\Config;
 use STS\Phpinfo\Models\Module;
+use STS\Phpinfo\Result;
 
-class TextParser extends Info
+class TextParser extends Result
 {
     public static function canParse(string $contents): bool
     {

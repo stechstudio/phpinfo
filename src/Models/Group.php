@@ -24,6 +24,13 @@ class Group
 
     public function headings(): Collection
     {
-        return $this->headings;
+        return $this->hasHeadings()
+            ? $this->headings
+            : collect();
+    }
+
+    public function heading($index): string|null
+    {
+        return trim(str_replace("Value", "", $this->headings->get($index)));
     }
 }
