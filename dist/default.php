@@ -44,7 +44,7 @@
 
     <div class="fixed w-full top-20 md:mt-1 bottom-0 overflow-y-auto bg-gray-100">
         <div class="flex-1 flex max-w-[96rem] mx-auto">
-            <aside class="fixed top-20 mt-1 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 xl:w-64 py-8 px-4 lg:px-6 xl:px-8 space-y-px scroll-py-8">
+            <aside class="fixed top-20 mt-1 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 xl:w-64 py-8 px-4 xl:px-8 space-y-px scroll-py-8">
                 <?php foreach ($info->modules() as $index => $module) { ?>
                     <a id="nav_<?php echo $module->key() ?>" @click=jump(<?php echo $index ?>) href="#<?php echo $module->key() ?>" class="px-4 py-1 rounded block"
                        :class="selected == '<?php echo $module->key() ?>' ? 'bg-gray-200' : 'hover:bg-white'"
@@ -52,70 +52,72 @@
                 <?php } ?>
             </aside>
 
-            <article class="space-y-8 md:ml-52 lg:ml-60 xl:ml-72 py-8 px-4 md:pl-0">
-                <?php foreach ($info->modules() as $index => $module) { ?>
-                    <section x-intersect:enter.margin.-100px="enter(<?php echo $index ?>)"
-                             x-intersect:leave.margin.-100px="leave(<?php echo $index ?>)"
-                             class="space-y-4 lg:space-y-8  scroll-mt-8" id="<?php echo $module->key() ?>">
-                        <h2 class="text-xl font-medium">
-                            <a href="#<?php echo $module->key() ?>" @click="jump(<?php echo $index ?>)" class="group inline-flex items-center gap-2">
-                                <?php echo $module->name() ?>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-4 h-4 opacity-50">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                                </svg>
-                            </a>
-                        </h2>
+            <article class="md:ml-52 lg:ml-60 xl:ml-72 py-8">
+                <div class="md:px-4 md:pl-0 xl:pr-8 lg:space-y-8">
+                    <?php foreach ($info->modules() as $index => $module) { ?>
+                        <section x-intersect:enter.margin.-100px="enter(<?php echo $index ?>)"
+                                 x-intersect:leave.margin.-100px="leave(<?php echo $index ?>)"
+                                 class="md:space-y-4 lg:space-y-8 scroll-mt-8" id="<?php echo $module->key() ?>">
+                            <h2 class="block text-xl font-medium pl-6 md:pl-0 py-2 md:py-0 sticky md:relative top-0 bg-gray-100 border-b border-gray-200 md:border-0 z-20">
+                                <a href="#<?php echo $module->key() ?>" @click="jump(<?php echo $index ?>)" class="group inline-flex items-center gap-2">
+                                    <?php echo $module->name() ?>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-4 h-4 opacity-50">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                                    </svg>
+                                </a>
+                            </h2>
 
-                        <?php foreach ($module->groups() as $group) { ?>
-                            <div class="shadow rounded-md bg-white overflow-hidden">
-                                <table class="w-full text-sm">
-                                    <?php if ($group->hasHeadings()) { ?>
-                                        <tr class="hidden lg:table-row bg-gray-200 text-gray-900 font-semibold">
-                                            <td class="flex-shrink-0 py-2 px-4"><?php echo $group->headings()->get(0) ?></td>
-                                            <td class="py-2 px-4"><?php echo $group->headings()->get(1) ?></td>
-                                            <?php if ($group->headings()->count() === 3) { ?>
-                                                <td class="py-2 px-4"><?php echo $group->headings()->get(2) ?></td>
-                                            <?php } ?>
-                                        </tr>
-                                    <?php } ?>
-                                    <tbody class="divide-y divide-gray-200 ">
-                                    <?php foreach ($group->configs() as $index => $config) { ?>
-                                        <tr class="flex flex-col py-2 lg:py-0 lg:table-row"
-                                            :class="hash == '<?php echo $module->combinedKeyFor($config) ?>' && 'bg-yellow-100'">
-                                            <td class="lg:w-1/4 flex-shrink-0 align-top py-2 lg:py-4 pl-4 font-semibold text-gray-500">
-                                                <a id="<?php echo $module->combinedKeyFor($config) ?>" href="#<?php echo $module->combinedKeyFor($config) ?>"
-                                                   class="inline-flex items-center gap-2 group hover:text-black inline-block active:ring-1 active:ring-indigo-500 scroll-mt-8">
-                                                    <?php echo $config->name() ?>
-
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-3 h-3  opacity-50">
-                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                                                    </svg>
-                                                </a>
-                                            </td>
-                                            <td class="py-2 lg:py-4 px-4 <?php echo $config->localValue() === null ? 'text-gray-400 italic' : 'text-gray-900' ?>"
-                                                style="overflow-wrap: anywhere">
-                                                <?php if ($group->hasHeadings()) { ?>
-                                                    <span class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-green-100 text-green-700 font-semibold rounded"><?php echo $group->heading(1) ?></span>
+                            <?php foreach ($module->groups() as $group) { ?>
+                                <div class="border-b border-gray-200 md:border-0 md:shadow md:rounded-md bg-white overflow-hidden">
+                                    <table class="w-full text-sm">
+                                        <?php if ($group->hasHeadings()) { ?>
+                                            <tr class="hidden lg:table-row bg-gray-200 text-gray-900 font-semibold">
+                                                <td class="flex-shrink-0 py-2 px-4"><?php echo $group->headings()->get(0) ?></td>
+                                                <td class="py-2 px-4"><?php echo $group->headings()->get(1) ?></td>
+                                                <?php if ($group->headings()->count() === 3) { ?>
+                                                    <td class="py-2 px-4"><?php echo $group->headings()->get(2) ?></td>
                                                 <?php } ?>
-                                                <?php echo $config->localValue() ?? 'no value' ?>
-                                            </td>
-                                            <?php if ($config->hasMasterValue()) { ?>
-                                                <td class="py-2 lg:py-4 px-4 {{ $config->masterValue() === null ? 'text-gray-400 italic' : 'text-gray-900' }}"
+                                            </tr>
+                                        <?php } ?>
+                                        <tbody class="divide-y divide-gray-200 ">
+                                        <?php foreach ($group->configs() as $index => $config) { ?>
+                                            <tr class="flex flex-col py-2 lg:py-0 lg:table-row"
+                                                :class="hash == '<?php echo $module->combinedKeyFor($config) ?>' && 'bg-yellow-100'">
+                                                <td class="lg:w-1/4 flex-shrink-0 align-top py-2 lg:py-4 pl-6 lg:pl-4 font-semibold text-gray-500">
+                                                    <a id="<?php echo $module->combinedKeyFor($config) ?>" href="#<?php echo $module->combinedKeyFor($config) ?>"
+                                                       class="inline-flex items-center gap-2 group hover:text-black inline-block active:ring-1 active:ring-indigo-500 scroll-mt-14 md:scroll-mt-8">
+                                                        <?php echo $config->name() ?>
+
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-3 h-3  opacity-50">
+                                                          <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                                                        </svg>
+                                                    </a>
+                                                </td>
+                                                <td class="py-2 lg:py-4 px-6 lg:px-4 <?php echo $config->localValue() === null ? 'text-gray-400 italic' : 'text-gray-900' ?>"
                                                     style="overflow-wrap: anywhere">
                                                     <?php if ($group->hasHeadings()) { ?>
-                                                        <span class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-blue-100 text-blue-700 font-semibold rounded"><?php echo $group->heading(2) ?></span>
+                                                        <span class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-green-100 text-green-700 font-semibold rounded"><?php echo $group->heading(1) ?></span>
                                                     <?php } ?>
-                                                    <?php echo $config->masterValue() ?? 'no value' ?>
+                                                    <?php echo $config->localValue() ?? 'no value' ?>
                                                 </td>
-                                            <?php } ?>
-                                        </tr>
-                                    <?php } ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php } ?>
-                    </section>
-                <?php } ?>
+                                                <?php if ($config->hasMasterValue()) { ?>
+                                                    <td class="py-2 lg:py-4 px-6 lg:px-4 {{ $config->masterValue() === null ? 'text-gray-400 italic' : 'text-gray-900' }}"
+                                                        style="overflow-wrap: anywhere">
+                                                        <?php if ($group->hasHeadings()) { ?>
+                                                            <span class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-blue-100 text-blue-700 font-semibold rounded"><?php echo $group->heading(2) ?></span>
+                                                        <?php } ?>
+                                                        <?php echo $config->masterValue() ?? 'no value' ?>
+                                                    </td>
+                                                <?php } ?>
+                                            </tr>
+                                        <?php } ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php } ?>
+                        </section>
+                    <?php } ?>
+                </div>
             </article>
         </div>
     </div>
