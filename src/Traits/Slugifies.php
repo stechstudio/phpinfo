@@ -7,7 +7,9 @@ trait Slugifies
     protected function slugify($text): string
     {
         return strtolower(
-            str_replace([' ', '-'], '_', $text)
+            str_replace([' ', '-', '/', '.'], '_',
+                str_replace(['"',"'"], "", $text)
+            )
         );
     }
 }

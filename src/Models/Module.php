@@ -21,6 +21,11 @@ class Module implements JsonSerializable
         return $this->slugify($this->name);
     }
 
+    public function combinedKeyFor(Config $config): string
+    {
+        return $this->key() . "_" . $config->key();
+    }
+
     public function name(): string
     {
         return $this->name;

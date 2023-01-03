@@ -1,3 +1,10 @@
+<?php
+// If you are copying this file out to be used elsewhere, uncomment the following lines,
+// and ensure the path to your composer autoload file is correct.
+//
+// require __DIR__ . '/../vendor/autoload.php';
+// $info = STS\Phpinfo\Info::capture();
+?>
 <!doctype html>
 <html>
 
@@ -37,7 +44,7 @@
 
     <div class="max-w-[96rem] mx-auto my-8 px-4">
         <div class="md:flex">
-            <aside class="fixed top-20 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 xl:w-64 mt-1 py-8 pr-4 xl:pr-8 space-y-px scroll-py-8">
+            <aside class="fixed top-20 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 xl:w-64 mt-1 pl-0.5 py-8 pr-4 xl:pr-8 space-y-px scroll-py-8">
                 <?php foreach ($info->modules() as $index => $module) { ?>
                     <a id="nav_<?php echo $module->key() ?>" @click=jump(<?php echo $index ?>) href="#<?php echo $module->key() ?>" class="px-4 py-1 rounded block"
                        :class="selected == '<?php echo $module->key() ?>' ? 'bg-gray-200' : 'hover:bg-white'"
@@ -70,9 +77,13 @@
                                     <?php } ?>
                                     <tbody class="divide-y divide-gray-200 ">
                                     <?php foreach ($group->configs() as $config) { ?>
-                                        <tr class="flex flex-col py-2 lg:py-0 lg:table-row">
+                                        <tr class="flex flex-col py-2 lg:py-0 lg:table-row"
+                                            :class="hash == '<?php echo $module->combinedKeyFor($config) ?>' && 'bg-yellow-100'">
                                             <td class="lg:w-1/4 flex-shrink-0 align-top py-2 lg:py-4 pl-4 font-semibold text-gray-500">
-                                                <?php echo $config->name() ?>
+                                                <a id="<?php echo $module->combinedKeyFor($config) ?>" href="#<?php echo $module->combinedKeyFor($config) ?>"
+                                                   class="hover:text-black inline-block scroll-mt-28 active:ring-1 active:ring-indigo-500">
+                                                    <?php echo $config->name() ?>
+                                                </a>
                                             </td>
                                             <td class="py-2 lg:py-4 px-4 <?php echo $config->localValue() === null ? 'text-gray-400 italic' : 'text-gray-900' ?>"
                                                 style="overflow-wrap: anywhere">
@@ -125,6 +136,7 @@
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('Navigation', () => ({
+            hash: null,
             mobileNav: false,
             modules: <?php echo json_encode($info->modules()->map->key()->values()) ?>,
             selected: null,
@@ -133,10 +145,18 @@
             init() {
                 this.selectModule(this.firstModuleVisible());
 
+                if(window.location.hash != '') {
+                    this.hash = window.location.hash.replace("#","");
+                }
+
                 setTimeout(() => {
                     document.querySelector(`#nav_${this.selected}`).scrollIntoView({block: "center"});
                     this.initialized = true;
                 }, 100);
+
+                window.addEventListener('hashchange', () => {
+                    this.hash = window.location.hash.replace("#","");
+                }, false);
             },
             firstModuleVisible() {
                 return Array.from(document.querySelectorAll('section')).filter((section) =>
