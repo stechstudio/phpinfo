@@ -90,7 +90,7 @@ class HtmlParser extends Result
     {
         if(!isset($this->xpath)) {
             $document = new DOMDocument;
-            $document->loadHTML(str_replace("\n", "", $this->contents));
+            $document->loadHTML(str_replace(["\n","\r\n"], "", $this->contents));
             $this->xpath = new DOMXpath($document);
         }
 
