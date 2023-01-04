@@ -53,11 +53,11 @@
             </aside>
 
             <article class="md:ml-52 lg:ml-60 xl:ml-72 py-8">
-                <div class="md:px-4 md:pl-0 xl:pr-8 lg:space-y-8">
+                <div class="md:px-4 md:pl-0 xl:pr-8 md:space-y-4 lg:space-y-8">
                     <?php foreach ($info->modules() as $index => $module) { ?>
                         <section x-intersect:enter.margin.-100px="enter(<?php echo $index ?>)"
                                  x-intersect:leave.margin.-100px="leave(<?php echo $index ?>)"
-                                 class="md:space-y-4 lg:space-y-8 scroll-mt-8" id="<?php echo $module->key() ?>">
+                                 class="md:space-y-4 lg:space-y-8 md:scroll-mt-8" id="<?php echo $module->key() ?>">
                             <h2 class="block text-xl font-medium pl-6 md:pl-0 py-2 md:py-0 sticky md:relative top-0 bg-gray-100 border-b border-gray-200 md:border-0 z-20">
                                 <a href="#<?php echo $module->key() ?>" @click="jump(<?php echo $index ?>)" class="group inline-flex items-center gap-2">
                                     <?php echo $module->name() ?>

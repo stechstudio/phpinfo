@@ -28,7 +28,7 @@ STS\Phpinfo\Info::render();
 ?>
 ```
 
-### Interactive with `phpinfo()` configuration
+### Interact with `phpinfo()` configuration
 
 If you're looking to directly inspect and interact with the configuration, you need to first capture it:
 
@@ -98,7 +98,7 @@ You see that we have four levels to the data structure:
 1. Base `info` containing `modules()`
 2. Modules with `name()` method, and containing `groups()`
 3. Groups containing `configs()` and optionally with `headings()`
-4. Configs with `name()`, `value()/localValue()`, and optionally `masterValue()
+4. Configs with `name()`, `value()/localValue()`, and optionally `masterValue()`
 
 You can _also_ access configs directly from the Module and base Info levels:
 
