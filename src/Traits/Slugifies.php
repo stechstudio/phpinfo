@@ -6,12 +6,6 @@ trait Slugifies
 {
     protected function slugify($text): string
     {
-        return strtolower(
-            trim(
-                str_replace([' ', '-', '/', '.', '[', ']'], '_',
-                    str_replace(['"', "'", '$'], "", $text)
-                ), '_'
-            )
-        );
+        return strtolower(trim(preg_replace("/(\W+)/i", "_", $text), '_'));
     }
 }
