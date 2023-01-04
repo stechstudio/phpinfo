@@ -136,11 +136,11 @@
     <div x-cloak x-transition.opacity x-show="mobileNav" class="fixed inset-0 overflow-hidden bg-gray-900/50 backdrop-blur-sm z-20">
         <div x-show="mobileNav" @click.away="hideMobileNav()" class="fixed top-0 bottom-0 right-0 w-80 bg-gray-800 z-30 ">
             <nav class="absolute inset-0 overflow-y-auto p-6 pt-12 space-y-px text-white">
-                <?php foreach ($info->modules() as $module) { ?>
-                    <a id="mobile_nav_<?php echo $module->key() ?>" href="#<?php echo $module->key() ?>" @click="hideMobileNav()" class="px-4 py-1 rounded block"
-                       :class="selected == '<?php echo $module->key() ?>' ? 'bg-gray-600' : ''"
-                       @click="selectModule('<?php echo $module->key() ?>')"><?php echo $module->name() ?></a>
-                <?php } ?>
+                <template x-for="module in filteredModules()" :key="module.key">
+                    <a :id="'mobile_nav_' + module.key" :href="'#' + module.key" @click="hideMobileNav()" class="px-4 py-1 rounded block"
+                       :class="selected == module.key ? 'bg-gray-600' : ''"
+                       @click="selectModule(module.key')" x-text="module.name"></a>
+                </template>
             </nav>
 
             <div class="absolute top-0 left-0 right-0 flex justify-end bg-gradient-to-b from-gray-800 via-gray-800 to-transparent">
