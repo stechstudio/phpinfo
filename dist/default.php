@@ -32,8 +32,11 @@
             <div class="md:hidden text-sm text-gray-500">v<?php echo $info->version() ?></div>
         </div>
         <div class="flex-1 flex justify-center">
-            <input type="search" class="w-48 md:w-72 lg:w-96 bg-gray-100 rounded-full px-4 py-2 text-sm md:text-base focus:outline-0 focus:bg-gray-200"
-                   placeholder="Type to search..." x-model.debounce="search" x-ref="search" @keydown.slash="event.preventDefault();"/>
+            <div class="relative group">
+                <input type="search" class="w-48 md:w-72 lg:w-96 bg-gray-100 rounded-full px-4 py-2 text-sm md:text-base border border-gray-100 focus:outline-0 focus:bg-white focus:border-gray-400"
+                       placeholder="Type to search..." x-model.debounce="search" x-ref="search" @keydown.stop="" x-on:focus="searchFocused = true" x-on:blur="searchFocused = false"/>
+                <div x-show="!searchFocused && !filtered()" class="absolute top-0 right-0 mt-2 mr-4 bg-white rounded px-2 py-1 text-xs text-gray-500">/</div>
+            </div>
         </div>
         <div class="flex-1 flex justify-end items-center gap-4 text-gray-400">
             <div class="text-right">
@@ -48,6 +51,14 @@
     </header>
 
     <div class="fixed w-full top-16 lg:top-20 bottom-0 overflow-y-auto bg-gray-100">
+        <div x-show="emptyState" class="max-w-3xl mx-auto mt-20 flex gap-4 justify-center text-gray-500 text-xl">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+
+            <div>No search results found</div>
+        </div>
+
         <div class="flex-1 flex max-w-[96rem] mx-auto">
             <aside class="fixed top-16 lg:top-20 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 xl:w-64 py-8 px-4 xl:px-8 space-y-px scroll-py-8">
                 <template x-for="(module, index) in info.modules" :key="module.key">
@@ -154,14 +165,11 @@
             selectedIndex: null,
             initialized: false,
             search: null,
+            searchFocused: false,
+            emptyState: false,
             init() {
-                if(window.location.hash != '') {
-                    this.hash = window.location.hash.replace("#","");
-                }
-
-                window.addEventListener('hashchange', () => {
-                    this.hash = window.location.hash.replace("#","");
-                }, false);
+                if(window.location.hash != '') this.hash = window.location.hash.replace("#","");
+                window.addEventListener('hashchange', () => this.hash = window.location.hash.replace("#",""), false);
 
                 document.addEventListener('alpine:initialized', () => {
                     if(this.hash) {
@@ -171,10 +179,31 @@
                         this.selectModule(this.firstModuleVisible());
                     }
 
-                    setTimeout(() => {
-                        document.querySelector(`#nav_${this.selected}`).scrollIntoView({block: "center"});
-                        this.initialized = true;
-                    }, 100);
+                    document.querySelector(`#nav_${this.selected}`).scrollIntoView({block: "center"});
+                    this.initialized = true;
+                });
+
+                this.$watch('search', () =>
+                    this.$nextTick(() => {
+                        this.emptyState = document.querySelectorAll('section:not([style*="display: none"])').length === 0;
+                    })
+                );
+            },
+            filteredModules() {
+                if(this.unfiltered()) return this.info.modules;
+
+                return this.info.modules.filter((module) => {
+                    module.groups = module.groups.filter((group) => {
+                        group.configs = group.configs.filter((config) => {
+                            return config.name.toLowerCase().includes(this.search.toLowerCase())
+                                || config.localValue.toLowerCase().includes(this.search.toLowerCase())
+                                || (config.hasMasterValue && config.masterValue.toLowerCase().includes(this.search.toLowerCase()))
+                        });
+
+                        return group.configs.length > 0;
+                    });
+
+                    return module.groups.length > 0;
                 });
             },
             filtered() {
@@ -184,9 +213,11 @@
                 return this.search == null || this.search == '';
             },
             firstModuleVisible() {
-                return Array.from(document.querySelectorAll('section')).filter((section) =>
+                let first = Array.from(document.querySelectorAll('section')).filter((section) =>
                     section.getBoundingClientRect().bottom > 100
-                )[0].id;
+                )[0];
+
+                return first ? first.id : null;
             },
             enter(index) {
                 if (this.initialized && (this.selectedIndex == null || index < this.selectedIndex || this.selectedNoLongerVisible())) {
