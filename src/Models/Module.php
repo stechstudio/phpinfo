@@ -58,7 +58,7 @@ class Module implements JsonSerializable
         return [
             "key" => $this->key(),
             "name" => $this->name(),
-            "groups" => $this->groups()
+            "groups" => $this->groups()->values()
         ];
     }
 }

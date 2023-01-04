@@ -69,8 +69,8 @@ class Config implements JsonSerializable
             "key" => $this->key(),
             "name" => $this->name(),
             "hasMasterValue" => $this->hasMasterValue(),
-            "localValue" => $this->localValue(),
-            "masterValue" => $this->masterValue(),
+            "localValue" => $this->localValue() ?? "no value",
+            "masterValue" => $this->hasMasterValue() ? ($this->masterValue() ?? "no value") : null,
         ];
     }
 }

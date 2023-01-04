@@ -3,8 +3,9 @@
 namespace STS\Phpinfo\Models;
 
 use Illuminate\Support\Collection;
+use JsonSerializable;
 
-class Group
+class Group implements JsonSerializable
 {
     public function __construct(
         protected Collection $configs,
@@ -32,5 +33,14 @@ class Group
     public function heading($index): string|null
     {
         return trim(str_replace("Value", "", $this->headings->get($index)));
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        return [
+            "hasHeadings" => $this->hasHeadings(),
+            "headings" => $this->headings(),
+            "configs" => $this->configs()->values()
+        ];
     }
 }

@@ -25,13 +25,17 @@
 </head>
 
 <body class="antialiased font-sans text-gray-800">
-<div class="" x-data='Navigation'>
+<div class="" x-data='Navigation' @keydown.window.slash.prevent="$refs.search.focus();">
     <header class="fixed top-0 w-full flex items-center justify-between shadow py-4 px-6 xl:px-8 bg-white z-10">
-        <div class="flex items-center gap-4">
+        <div class="flex-1 flex items-center gap-4">
             <img class="h-10" src="data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -1 100 50'%3E%3Cpath d='m7.579 10.123 14.204 0c4.169 0.035 7.19 1.237 9.063 3.604 1.873 2.367 2.491 5.6 1.855 9.699-0.247 1.873-0.795 3.71-1.643 5.512-0.813 1.802-1.943 3.427-3.392 4.876-1.767 1.837-3.657 3.003-5.671 3.498-2.014 0.495-4.099 0.742-6.254 0.742l-6.36 0-2.014 10.07-7.367 0 7.579-38.001 0 0m6.201 6.042-3.18 15.9c0.212 0.035 0.424 0.053 0.636 0.053 0.247 0 0.495 0 0.742 0 3.392 0.035 6.219-0.3 8.48-1.007 2.261-0.742 3.781-3.321 4.558-7.738 0.636-3.71 0-5.848-1.908-6.413-1.873-0.565-4.222-0.83-7.049-0.795-0.424 0.035-0.83 0.053-1.219 0.053-0.353 0-0.724 0-1.113 0l0.053-0.053'/%3E%3Cpath d='m41.093 0 7.314 0-2.067 10.123 6.572 0c3.604 0.071 6.289 0.813 8.056 2.226 1.802 1.413 2.332 4.099 1.59 8.056l-3.551 17.649-7.42 0 3.392-16.854c0.353-1.767 0.247-3.021-0.318-3.763-0.565-0.742-1.784-1.113-3.657-1.113l-5.883-0.053-4.346 21.783-7.314 0 7.632-38.054 0 0'/%3E%3Cpath d='m70.412 10.123 14.204 0c4.169 0.035 7.19 1.237 9.063 3.604 1.873 2.367 2.491 5.6 1.855 9.699-0.247 1.873-0.795 3.71-1.643 5.512-0.813 1.802-1.943 3.427-3.392 4.876-1.767 1.837-3.657 3.003-5.671 3.498-2.014 0.495-4.099 0.742-6.254 0.742l-6.36 0-2.014 10.07-7.367 0 7.579-38.001 0 0m6.201 6.042-3.18 15.9c0.212 0.035 0.424 0.053 0.636 0.053 0.247 0 0.495 0 0.742 0 3.392 0.035 6.219-0.3 8.48-1.007 2.261-0.742 3.781-3.321 4.558-7.738 0.636-3.71 0-5.848-1.908-6.413-1.873-0.565-4.222-0.83-7.049-0.795-0.424 0.035-0.83 0.053-1.219 0.053-0.353 0-0.724 0-1.113 0l0.053-0.053'/%3E%3C/svg%3E%0A"/>
 
         </div>
-        <div class="flex items-center gap-4 text-gray-400">
+        <div class="flex-1 flex justify-center">
+            <input type="search" class="w-96 bg-gray-100 rounded-full px-4 py-2 focus:outline-0 focus:bg-gray-200"
+                   placeholder="Search configs..." x-model.debounce="search" x-ref="search" @keydown.slash="console.log('yo'); event.preventDefault();"/>
+        </div>
+        <div class="flex-1 flex justify-end items-center gap-4 text-gray-400">
             <div class="text-right">
                 <h1 class="text-xl md:text-2xl font-semibold text-gray-900">v<?php echo $info->version() ?></h1>
                 <div class="text-sm text-gray-500"><?php echo $info->config('hostname') ?></div>
@@ -47,78 +51,74 @@
     <div class="fixed w-full top-20 md:mt-1 bottom-0 overflow-y-auto bg-gray-100">
         <div class="flex-1 flex max-w-[96rem] mx-auto">
             <aside class="fixed top-20 mt-1 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 xl:w-64 py-8 px-4 xl:px-8 space-y-px scroll-py-8">
-                <?php foreach ($info->modules() as $index => $module) { ?>
-                    <a id="nav_<?php echo $module->key() ?>" @click=jump(<?php echo $index ?>) href="#<?php echo $module->key() ?>" class="px-4 py-1 rounded block"
-                       :class="selected == '<?php echo $module->key() ?>' ? 'bg-gray-200' : 'hover:bg-white'"
-                       @click="select('<?php echo $module->key() ?>')"><?php echo $module->name() ?></a>
-                <?php } ?>
+                <template x-for="(module, index) in info.modules" :key="module.key">
+                    <a :id="'nav_' + module.key" @click=jump(index) :href="'#' + module.key" class="px-4 py-1 rounded block"
+                       :class="selected == module.key ? 'bg-gray-200' : 'hover:bg-white'"
+                       @click="select(index)" x-show="shouldShowSection(module)">
+                        <span x-text="module.name"></span>
+                    </a>
+                </template>
             </aside>
 
-            <article class="md:ml-52 lg:ml-60 xl:ml-72 py-8">
+            <article class="flex-1 md:ml-52 lg:ml-60 xl:ml-72 py-8">
                 <div class="md:px-4 md:pl-0 xl:pr-8 md:space-y-4 lg:space-y-8">
-                    <?php foreach ($info->modules() as $index => $module) { ?>
-                        <section x-intersect:enter.margin.-100px="enter(<?php echo $index ?>)"
-                                 x-intersect:leave.margin.-100px="leave(<?php echo $index ?>)"
-                                 class="md:space-y-4 lg:space-y-8 md:scroll-mt-8" id="<?php echo $module->key() ?>">
+                    <template x-for="(module, index) in info.modules" :key="module.key">
+                        <section x-intersect:enter.margin.-100px="enter(index)"
+                                 x-intersect:leave.margin.-100px="leave(index)"
+                                 x-show="shouldShowSection(module)"
+                                 class="md:space-y-4 lg:space-y-8 md:scroll-mt-8" :id="module.key">
                             <h2 class="block text-xl font-bold text-gray-900 pl-6 md:pl-0 py-2 md:py-0 sticky md:relative top-0 bg-gray-100 border-b border-gray-200 md:border-0 z-20">
-                                <a href="#<?php echo $module->key() ?>" @click="jump(<?php echo $index ?>)" class="group inline-flex items-center gap-2">
-                                    <?php echo $module->name() ?>
+                                <a :href="'#' + module.key" @click="jump(index)" class="group inline-flex items-center gap-2">
+                                    <span x-text="module.name"></span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-4 h-4 opacity-50">
                                       <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
                                     </svg>
                                 </a>
                             </h2>
 
-                            <?php foreach ($module->groups() as $group) { ?>
-                                <div class="border-b border-gray-200 md:border-0 md:shadow md:rounded-md bg-white overflow-hidden">
+                            <template x-for="(group, index) in module.groups" :key="'group' + index">
+                                <div x-show="filteredConfigs(group.configs).length" class="table-wrapper border-b border-gray-200 md:border-0 md:shadow md:rounded-md bg-white overflow-hidden">
                                     <table class="w-full text-sm">
-                                        <?php if ($group->hasHeadings()) { ?>
-                                            <tr class="hidden lg:table-row bg-gray-200 text-gray-900 font-semibold">
-                                                <td class="flex-shrink-0 py-2 px-4"><?php echo $group->headings()->get(0) ?></td>
-                                                <td class="py-2 px-4"><?php echo $group->headings()->get(1) ?></td>
-                                                <?php if ($group->headings()->count() === 3) { ?>
-                                                    <td class="py-2 px-4"><?php echo $group->headings()->get(2) ?></td>
-                                                <?php } ?>
+                                        <thead>
+                                            <tr x-show="group && group.hasHeadings" class="hidden lg:table-row bg-gray-200 text-gray-900 font-semibold">
+                                                <td class="flex-shrink-0 py-2 px-4"><span x-text="group.headings[0]"></span></td>
+                                                <td class="py-2 px-4"><span x-text="group.headings[1]"></span></td>
+                                                <td x-show="group.headings.length == 3" class="py-2 px-4"><span x-text="group.headings[2]"></span></td>
                                             </tr>
-                                        <?php } ?>
-                                        <tbody class="divide-y divide-gray-200 ">
-                                        <?php foreach ($group->configs() as $index => $config) { ?>
-                                            <tr class="flex flex-col py-2 lg:py-0 lg:table-row"
-                                                :class="hash == '<?php echo $module->combinedKeyFor($config) ?>' && 'bg-yellow-100'">
-                                                <td class="lg:w-1/4 flex-shrink-0 align-top py-2 lg:py-4 pl-6 lg:pl-4 font-semibold text-gray-500">
-                                                    <a id="<?php echo $module->combinedKeyFor($config) ?>" href="#<?php echo $module->combinedKeyFor($config) ?>"
-                                                       class="inline-flex items-center gap-2 group hover:text-black inline-block active:ring-1 active:ring-indigo-500 scroll-mt-14 md:scroll-mt-8">
-                                                        <?php echo $config->name() ?>
+                                        </thead>
 
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-3 h-3  opacity-50">
-                                                          <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                                                        </svg>
-                                                    </a>
-                                                </td>
-                                                <td class="py-2 lg:py-4 px-6 lg:px-4 <?php echo $config->localValue() === null ? 'text-gray-400 italic' : 'text-gray-900' ?>"
-                                                    style="overflow-wrap: anywhere">
-                                                    <?php if ($group->hasHeadings()) { ?>
-                                                        <span class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-green-100 text-green-700 font-semibold rounded"><?php echo $group->heading(1) ?></span>
-                                                    <?php } ?>
-                                                    <?php echo $config->localValue() ?? 'no value' ?>
-                                                </td>
-                                                <?php if ($config->hasMasterValue()) { ?>
-                                                    <td class="py-2 lg:py-4 px-6 lg:px-4 {{ $config->masterValue() === null ? 'text-gray-400 italic' : 'text-gray-900' }}"
-                                                        style="overflow-wrap: anywhere">
-                                                        <?php if ($group->hasHeadings()) { ?>
-                                                            <span class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-blue-100 text-blue-700 font-semibold rounded"><?php echo $group->heading(2) ?></span>
-                                                        <?php } ?>
-                                                        <?php echo $config->masterValue() ?? 'no value' ?>
+                                        <tbody class="divide-y divide-gray-200 ">
+                                            <template x-for="(config, index) in filteredConfigs(group.configs)" :key="config.key">
+                                                <tr class="flex flex-col py-2 lg:py-0 lg:table-row"
+                                                    :class="hash == config.key && 'bg-yellow-100'">
+                                                    <td class="lg:w-1/4 flex-shrink-0 align-top py-2 lg:py-4 pl-6 lg:pl-4 font-semibold text-gray-500">
+                                                        <a :id="config.key" :href="'#' + config.key"
+                                                           class="inline-flex items-center gap-2 group hover:text-black inline-block active:ring-1 active:ring-indigo-500 scroll-mt-14 md:scroll-mt-8">
+                                                            <span x-html="highlighted(config.name)"></span>
+
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-3 h-3  opacity-50">
+                                                              <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                                                            </svg>
+                                                        </a>
                                                     </td>
-                                                <?php } ?>
-                                            </tr>
-                                        <?php } ?>
+                                                    <td class="py-2 lg:py-4 px-6 lg:px-4" style="overflow-wrap: anywhere"
+                                                        :class="config.localValue == null ? 'text-gray-400 italic' : 'text-gray-900'">
+                                                        <span x-show="group.hasHeadings" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-green-100 text-green-700 font-semibold rounded" x-text="group.headings[1]"></span>
+                                                        <span x-html="highlighted(config.localValue)"></span>
+                                                    </td>
+                                                    <td x-show="config.hasMasterValue" class="py-2 lg:py-4 px-6 lg:px-4" style="overflow-wrap: anywhere"
+                                                        :class="config.masterValue == null ? 'text-gray-400 italic' : 'text-gray-900'">
+                                                        <span x-show="group.hasHeadings" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-blue-100 text-blue-700 font-semibold rounded" x-text="group.headings[2]"></span>
+                                                        <span x-html="highlighted(config.masterValue)"></span>
+                                                    </td>
+                                                </tr>
+                                            </template>
                                         </tbody>
                                     </table>
                                 </div>
-                            <?php } ?>
+                            </template>
                         </section>
-                    <?php } ?>
+                    </template>
                 </div>
             </article>
         </div>
@@ -149,25 +149,38 @@
         Alpine.data('Navigation', () => ({
             hash: null,
             mobileNav: false,
+            info: <?php echo json_encode($info) ?>,
             modules: <?php echo json_encode($info->modules()->map->key()->values()) ?>,
             selected: null,
             selectedIndex: null,
             initialized: false,
+            search: null,
             init() {
-                this.selectModule(this.firstModuleVisible());
-
                 if(window.location.hash != '') {
                     this.hash = window.location.hash.replace("#","");
                 }
 
-                setTimeout(() => {
-                    document.querySelector(`#nav_${this.selected}`).scrollIntoView({block: "center"});
-                    this.initialized = true;
-                }, 100);
-
                 window.addEventListener('hashchange', () => {
                     this.hash = window.location.hash.replace("#","");
                 }, false);
+
+                document.addEventListener('alpine:initialized', () => {
+                    if(this.hash) {
+                        document.querySelector(`#${this.hash}`).scrollIntoView();
+                        this.selectModule(this.isModule(this.hash) ? this.hash : this.firstModuleVisible());
+                    } else {
+                        this.selectModule(this.firstModuleVisible());
+                    }
+
+                    setTimeout(() => {
+                        document.querySelector(`#nav_${this.selected}`).scrollIntoView({block: "center"});
+                        this.initialized = true;
+                    }, 100);
+                });
+
+                this.$watch('search', () => {
+
+                });
             },
             firstModuleVisible() {
                 return Array.from(document.querySelectorAll('section')).filter((section) =>
@@ -187,13 +200,16 @@
             jump(index) {
                 this.select(index);
             },
+            isModule(key) {
+                return this.modules.indexOf(key) > -1;
+            },
             select(index) {
                 this.selectedIndex = index;
                 this.selected = this.modules[index];
                 this.scrollIntoView();
             },
             selectModule(key) {
-                this.select(this.modules.indexOf(key));
+                if(this.isModule(key)) this.select(this.modules.indexOf(key));
             },
             selectedNoLongerVisible() {
                 return document.querySelector("#" + this.selected).getBoundingClientRect().bottom < 100;
@@ -209,6 +225,30 @@
             hideMobileNav() {
                 document.body.style = "";
                 this.mobileNav = false;
+            },
+            highlighted(text) {
+                if(this.search == null || this.search == '') return text;
+
+                if(text == null) return null;
+
+                return text.replace(new RegExp(this.search,"gi"), "<mark>$&</mark>");
+            },
+            filteredConfigs(configs)
+            {
+                if(this.search == null || this.search == '') return configs;
+
+                return configs.filter(config =>
+                    config.name.toLowerCase().includes(this.search.toLowerCase())
+                    || config.localValue.toLowerCase().includes(this.search.toLowerCase())
+                    || (config.hasMasterValue && config.masterValue.toLowerCase().includes(this.search.toLowerCase()))
+                );
+            },
+            shouldShowSection(module) {
+                if(!this.initialized || this.search == null || this.search == '') return true;
+
+                return module.groups.filter(
+                    (group) => this.filteredConfigs(group.configs).length > 0
+                ).length > 0;
             }
         }))
     });

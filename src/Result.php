@@ -89,7 +89,7 @@ abstract class Result implements JsonSerializable
     {
         return [
             'version' => $this->version(),
-            'modules' => $this->modules()
+            'modules' => $this->modules()->values()
         ];
     }
 }
