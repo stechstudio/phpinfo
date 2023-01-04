@@ -38,6 +38,17 @@ use STS\Phpinfo\Info;
 $info = Info::capture();
 ```
 
+If you have `phpinfo()` output that you've saved previously and want to load and parse:
+```php
+use STS\Phpinfo\Info;
+
+// If you've saved the HTML output from phpinfo()
+$info = Info::fromHtml($yourSavedHtmlOutput);
+
+// If you've saved the CLI output from phpinfo()
+$info = Info::fromText($yourSavedHtmlOutput);
+```
+
 From here you can query some base info, modules, and configs:
 ```php
 // Your PHP version
