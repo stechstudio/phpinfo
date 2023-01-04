@@ -51,7 +51,7 @@
     </header>
 
     <div class="fixed w-full top-16 lg:top-20 bottom-0 overflow-y-auto bg-gray-100">
-        <div x-show="emptyState" class="max-w-3xl mx-auto mt-20 flex gap-4 justify-center text-gray-500 text-xl">
+        <div x-show="filteredModules().length == 0" class="max-w-3xl mx-auto mt-20 flex gap-4 justify-center text-gray-500 text-xl">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
@@ -61,10 +61,10 @@
 
         <div class="flex-1 flex max-w-[96rem] mx-auto">
             <aside class="fixed top-16 lg:top-20 bottom-0 overflow-y-auto hidden md:block flex-shrink-0 w-48 lg:w-56 xl:w-64 py-8 px-4 xl:px-8 space-y-px scroll-py-8">
-                <template x-for="(module, index) in info.modules" :key="module.key">
-                    <a :id="'nav_' + module.key" @click=jump(index) :href="'#' + module.key" class="px-4 py-1 rounded block"
+                <template x-for="module in filteredModules()" :key="module.key">
+                    <a :id="'nav_' + module.key" @click=jump(module.key) :href="'#' + module.key" class="px-4 py-1 rounded block"
                        :class="selected == module.key ? 'bg-gray-200' : 'hover:bg-white'"
-                       @click="select(index)" x-show="shouldShowSection(module)">
+                       @click="selectModule(module.key)">
                         <span x-text="module.name"></span>
                     </a>
                 </template>
@@ -72,13 +72,12 @@
 
             <article class="flex-1 md:ml-52 lg:ml-60 xl:ml-72 py-8">
                 <div class="md:px-4 md:pl-0 xl:pr-8">
-                    <template x-for="(module, index) in info.modules" :key="module.key">
-                        <section x-intersect:enter.margin.-100px="enter(index)"
-                                 x-intersect:leave.margin.-100px="leave(index)"
-                                 x-show="shouldShowSection(module)"
+                    <template x-for="module in filteredModules()" :key="module.key">
+                        <section x-intersect:enter.margin.-100px="enter(module.key)"
+                                 x-intersect:leave.margin.-100px="leave(module.key)"
                                  class="md:space-y-4 lg:space-y-8 md:mb-4 lg:mb-8 md:scroll-mt-8" :id="module.key">
                             <h2 class="block text-xl font-bold text-gray-900 pl-6 md:pl-0 py-2 md:py-0 sticky md:relative top-0 bg-gray-100 border-b border-gray-200 md:border-0 z-20">
-                                <a :href="'#' + module.key" @click="jump(index)" class="group inline-flex items-center gap-2">
+                                <a :href="'#' + module.key" @click="jump(module.key)" class="group inline-flex items-center gap-2">
                                     <span x-text="module.name"></span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-4 h-4 opacity-50">
                                       <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
@@ -87,7 +86,7 @@
                             </h2>
 
                             <template x-for="(group, index) in module.groups" :key="'group' + index">
-                                <div x-show="filteredConfigs(group.configs).length" class="table-wrapper md:shadow md:rounded-md bg-white overflow-hidden">
+                                <div x-show="group.configs.length" class="table-wrapper md:shadow md:rounded-md bg-white overflow-hidden">
                                     <table class="w-full text-sm">
                                         <thead>
                                             <tr x-show="group && group.hasHeadings" class="hidden lg:table-row bg-gray-200 text-gray-900 font-semibold">
@@ -98,7 +97,7 @@
                                         </thead>
 
                                         <tbody class="">
-                                            <template x-for="(config, index) in filteredConfigs(group.configs)" :key="config.key">
+                                            <template x-for="config in group.configs" :key="config.key">
                                                 <tr class="flex flex-col py-2 lg:py-0 lg:table-row border-b border-gray-200"
                                                     :class="hash == config.key && 'bg-yellow-100'">
                                                     <td class="lg:w-1/4 flex-shrink-0 align-top py-2 lg:py-4 pl-6 lg:pl-4 font-semibold text-gray-500">
@@ -137,10 +136,10 @@
     <div x-cloak x-transition.opacity x-show="mobileNav" class="fixed inset-0 overflow-hidden bg-gray-900/50 backdrop-blur-sm z-20">
         <div x-show="mobileNav" @click.away="hideMobileNav()" class="fixed top-0 bottom-0 right-0 w-80 bg-gray-800 z-30 ">
             <nav class="absolute inset-0 overflow-y-auto p-6 pt-12 space-y-px text-white">
-                <?php foreach ($info->modules() as $index => $module) { ?>
+                <?php foreach ($info->modules() as $module) { ?>
                     <a id="mobile_nav_<?php echo $module->key() ?>" href="#<?php echo $module->key() ?>" @click="hideMobileNav()" class="px-4 py-1 rounded block"
                        :class="selected == '<?php echo $module->key() ?>' ? 'bg-gray-600' : ''"
-                       @click="select('<?php echo $module->key() ?>')"><?php echo $module->name() ?></a>
+                       @click="selectModule('<?php echo $module->key() ?>')"><?php echo $module->name() ?></a>
                 <?php } ?>
             </nav>
 
@@ -159,14 +158,12 @@
         Alpine.data('Navigation', () => ({
             hash: null,
             mobileNav: false,
-            info: <?php echo json_encode($info) ?>,
             modules: <?php echo json_encode($info->modules()->map->key()->values()) ?>,
             selected: null,
             selectedIndex: null,
             initialized: false,
             search: null,
             searchFocused: false,
-            emptyState: false,
             init() {
                 if(window.location.hash != '') this.hash = window.location.hash.replace("#","");
                 window.addEventListener('hashchange', () => this.hash = window.location.hash.replace("#",""), false);
@@ -182,17 +179,14 @@
                     document.querySelector(`#nav_${this.selected}`).scrollIntoView({block: "center"});
                     this.initialized = true;
                 });
-
-                this.$watch('search', () =>
-                    this.$nextTick(() => {
-                        this.emptyState = document.querySelectorAll('section:not([style*="display: none"])').length === 0;
-                    })
-                );
+            },
+            info() {
+                return <?php echo json_encode($info) ?>;
             },
             filteredModules() {
-                if(this.unfiltered()) return this.info.modules;
+                if(this.unfiltered()) return this.info().modules;
 
-                return this.info.modules.filter((module) => {
+                return this.info().modules.filter((module) => {
                     module.groups = module.groups.filter((group) => {
                         group.configs = group.configs.filter((config) => {
                             return config.name.toLowerCase().includes(this.search.toLowerCase())
@@ -214,23 +208,27 @@
             },
             firstModuleVisible() {
                 let first = Array.from(document.querySelectorAll('section')).filter((section) =>
-                    section.getBoundingClientRect().bottom > 100
+                    section && section.getBoundingClientRect().bottom > 100
                 )[0];
 
                 return first ? first.id : null;
             },
-            enter(index) {
+            enter(key) {
+                let index = this.modules.indexOf(key);
+
                 if (this.initialized && (this.selectedIndex == null || index < this.selectedIndex || this.selectedNoLongerVisible())) {
                     this.select(index);
                 }
             },
-            leave(index) {
+            leave(key) {
+                let index = this.modules.indexOf(key);
+
                 if (this.initialized && (this.selectedIndex == null || this.selectedIndex == index || this.selectedNoLongerVisible())) {
                     this.selectNextIndex();
                 }
             },
-            jump(index) {
-                this.select(index);
+            jump(key) {
+                this.selectModule(key);
             },
             isModule(key) {
                 return this.modules.indexOf(key) > -1;
@@ -251,10 +249,14 @@
                 if(this.isModule(key)) this.select(this.modules.indexOf(key));
             },
             selectedNoLongerVisible() {
-                return document.querySelector("#" + this.selected).getBoundingClientRect().bottom < 100;
+                let el = document.querySelector("#" + this.selected);
+
+                return el == null || el.getBoundingClientRect().bottom < 100;
             },
             scrollIntoView() {
-                document.querySelector(`#nav_${this.selected}`).scrollIntoView({block: "nearest"});
+                let el = document.querySelector(`#nav_${this.selected}`);
+
+                if(el) el.scrollIntoView({block: "nearest"});
             },
             showMobileNav() {
                 document.body.style = "overflow-y: hidden";
@@ -271,23 +273,6 @@
                 if(text == null) return null;
 
                 return text.replace(new RegExp(this.search,"gi"), "<mark>$&</mark>");
-            },
-            filteredConfigs(configs)
-            {
-                if(this.unfiltered()) return configs;
-
-                return configs.filter(config =>
-                    config.name.toLowerCase().includes(this.search.toLowerCase())
-                    || config.localValue.toLowerCase().includes(this.search.toLowerCase())
-                    || (config.hasMasterValue && config.masterValue.toLowerCase().includes(this.search.toLowerCase()))
-                );
-            },
-            shouldShowSection(module) {
-                if(!this.initialized || this.unfiltered()) return true;
-
-                return module.groups.filter(
-                    (group) => this.filteredConfigs(group.configs).length > 0
-                ).length > 0;
             }
         }))
     });
