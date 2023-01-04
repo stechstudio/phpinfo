@@ -43,10 +43,10 @@ From here you can query some base info, modules, and configs:
 // Your PHP version
 $info->version(); // 8.1.1
 
-// Check for the presence of a specific module, case-insensitive
+// Check for the presence of a specific module. Name is case-insensitive.
 $info->hasModule('redis'); // true
 
-// Check globally to see if a specific configuration key is present in any module. Name is case-insensitive.
+// Check to see if a specific configuration key is present. Name is case-insensitive.
 $info->hasConfig('ICU version'); // true
 
 // Retrieve the value for a specific configuration key. Name is case-insensitive. If there is both a local and master value, the local is returned as default.
@@ -101,11 +101,7 @@ $info->configs();
 
 ### Modules and Groups
 
-We've already seen how to iterate over modules and groups. Sometimes you may want to
-
-You can look up a specific module if you want to interact with it directly.
-
-The general information at the top of `phpinfo()` is stored as the "General" module.
+We've already seen how to iterate over modules and groups. Sometimes you may want to look up a specific module and inspect it directly.
 
 ```php
 // This lookup is case-insensitive. Will return null if no matching module is found.
@@ -114,9 +110,15 @@ $module = $info->module('zend opcache');
 // Retrieve the name of the module as displayed in phpinfo(), which might have a different case.
 $module->name(); // Zend OPcache
 
+// Flatten all configs into one collection. You can then use any Laravel collection method.
+$module->configs()->count(); // 59
+
 // Retrieve a specific configuration from this module. This works exactly the same as the main `config()` method shown in the previous section.
 $module->config('Max keys'); // 16229
 $module->config('opcache.enable_file_override', 'master'); // Off
+
+// Retrieve just the first group of configs, which is often the list of single-value configs
+$group = $info->module('session')->groups()->first(); // Collection of Configs
 ```
 
 
