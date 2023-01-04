@@ -32,7 +32,17 @@ class Group implements JsonSerializable
 
     public function heading($index): string|null
     {
-        return trim(str_replace("Value", "", $this->headings->get($index)));
+        return $this->headings->get($index);
+    }
+
+    public function shortHeading($index): string|null
+    {
+        return $this->shorten($this->headings->get($index));
+    }
+
+    protected function shorten($heading): string|null
+    {
+        return trim(str_replace("Value", "", $heading));
     }
 
     public function jsonSerialize(): mixed
@@ -40,6 +50,7 @@ class Group implements JsonSerializable
         return [
             "hasHeadings" => $this->hasHeadings(),
             "headings" => $this->headings(),
+            "shortHeadings" => $this->headings()->map(fn($heading) => $this->shorten($heading)),
             "configs" => $this->configs()->values()
         ];
     }

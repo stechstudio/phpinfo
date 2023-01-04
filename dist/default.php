@@ -112,12 +112,12 @@
                                                     </td>
                                                     <td class="py-2 lg:py-4 px-6 lg:px-4" style="overflow-wrap: anywhere"
                                                         :class="config.localValue == null ? 'text-gray-400 italic' : 'text-gray-900'">
-                                                        <span x-show="group.hasHeadings" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-green-100 text-green-700 font-semibold rounded" x-text="group.headings[1]"></span>
+                                                        <span x-show="group.hasHeadings" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-green-100 text-green-700 font-semibold rounded" x-text="group.shortHeadings[1]"></span>
                                                         <span x-html="highlighted(config.localValue)"></span>
                                                     </td>
                                                     <td x-show="config.hasMasterValue" class="py-2 lg:py-4 px-6 lg:px-4" style="overflow-wrap: anywhere"
                                                         :class="config.masterValue == null ? 'text-gray-400 italic' : 'text-gray-900'">
-                                                        <span x-show="group.hasHeadings" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-blue-100 text-blue-700 font-semibold rounded" x-text="group.headings[2]"></span>
+                                                        <span x-show="group.hasHeadings" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-blue-100 text-blue-700 font-semibold rounded" x-text="group.shortHeadings[2]"></span>
                                                         <span x-html="highlighted(config.masterValue)"></span>
                                                     </td>
                                                 </tr>
