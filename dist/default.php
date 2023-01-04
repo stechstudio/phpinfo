@@ -135,7 +135,7 @@
 
     <div x-cloak x-transition.opacity x-show="mobileNav" class="fixed inset-0 overflow-hidden bg-gray-900/50 backdrop-blur-sm z-20">
         <div x-show="mobileNav" @click.away="hideMobileNav()" class="fixed top-0 bottom-0 right-0 w-80 bg-gray-800 z-30 ">
-            <nav class="absolute inset-0 overflow-y-auto p-6 pt-12 space-y-px text-white">
+            <nav class="absolute inset-0 overflow-y-auto p-6 pt-16 space-y-px text-white">
                 <template x-for="module in filteredModules()" :key="module.key">
                     <a :id="'mobile_nav_' + module.key" :href="'#' + module.key" @click="hideMobileNav()" class="px-4 py-1 rounded block"
                        :class="selected == module.key ? 'bg-gray-600' : ''"
@@ -144,7 +144,7 @@
             </nav>
 
             <div class="absolute top-0 left-0 right-0 flex justify-end bg-gradient-to-b from-gray-800 via-gray-800 to-transparent">
-                <button @click="hideMobileNav()" class="m-2 p-2 text-gray-400">
+                <button @click="hideMobileNav()" class="mt-3 mr-4 p-2 bg-gray-800 text-gray-400 border border-gray-600 rounded">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
