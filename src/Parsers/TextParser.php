@@ -12,12 +12,14 @@ class TextParser extends Result
 {
     public static function canParse(string $contents): bool
     {
-        return str_contains($contents, "phpinfo()\nPHP Version")
+        return str_contains(str_replace("\r\n","\n",$contents), "phpinfo()\nPHP Version")
             && count(explode("_______________________________________________________________________", $contents)) === 3;
     }
 
     protected function parse(): void
     {
+        $this->contents = str_replace("\r\n","\n", $this->contents);
+
         // phpinfo() helpfully gives us this big line, separating the general info, modules, and credits/license
         [$general, $modules, $credits] = explode("_______________________________________________________________________", $this->contents);
 

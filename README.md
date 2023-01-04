@@ -52,7 +52,7 @@ $info = Info::fromText($yourSavedHtmlOutput);
 From here you can query some base info, modules, and configs:
 ```php
 // Your PHP version
-$info->version(); // 8.1.1
+$info->version(); // 8.2.0
 
 // Check for the presence of a specific module. Name is case-insensitive.
 $info->hasModule('redis'); // true
