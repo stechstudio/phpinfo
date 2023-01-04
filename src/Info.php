@@ -34,7 +34,7 @@ abstract class Info
         return match(true) {
             HtmlParser::canParse($contents) => new HtmlParser($contents),
             TextParser::canParse($contents) => new TextParser($contents),
-            default => throw new InvalidArgumentException("Contents provided does not appear to be valid phpinfo() output")
+            default => throw new InvalidArgumentException("Content provided does not appear to be valid phpinfo() output")
         };
     }
 

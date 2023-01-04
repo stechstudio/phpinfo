@@ -23,7 +23,7 @@ abstract class Result implements JsonSerializable
     public function __construct(protected string $contents)
     {
         if(!static::canParse($contents)) {
-            throw new InvalidArgumentException('Contents provided does not appear to be valid phpinfo() output');
+            throw new InvalidArgumentException('Content provided does not appear to be valid phpinfo() output');
         }
 
         $this->parse();
