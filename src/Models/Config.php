@@ -28,7 +28,9 @@ class Config implements JsonSerializable
 
     public function key(): string
     {
-        return "config_" . $this->slugify($this->name);
+        return $this->name == "Names"
+            ? "config_names_" . md5($this->value())
+            : "config_" . $this->slugify($this->name);
     }
 
     public function name(): string

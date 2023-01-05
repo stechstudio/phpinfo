@@ -10,14 +10,22 @@ class Group implements JsonSerializable
 {
     use Slugifies;
 
-    protected $note = null;
-
     public function __construct(
         protected Collection $configs,
         protected ?Collection $headings = null,
-        protected $name = null
+        protected $name = null,
+        protected $note = null
     )
     {}
+
+    public static function simple($name, $configName, $contents)
+    {
+        return new static(
+            collect([ new Config($configName, $contents) ]),
+            null,
+            $name
+        );
+    }
 
     public function addNote($note): self
     {
