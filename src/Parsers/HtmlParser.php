@@ -61,18 +61,28 @@ class HtmlParser extends Result
         while ($current->nextSibling->nodeName === "table") {
             $current = $current->nextSibling;
             $firstRowIndex = 0;
+            $note = null;
+            $title = null;
 
-            // See if this table has a title
-            if(
-                // If there is a single column in our first row, it could be a title OR a license note (like mbstring)
-                $current->childNodes[0]->childNodes->length === 1
+            // If there is a single column in our first row, it could be a title (credits) OR a license note (like mbstring)
+            if($current->childNodes[0]->childNodes->length === 1) {
                 // The only way to really know it check the length, titles will be short
-                && strlen($current->childNodes[0]->childNodes[0]->nodeValue) < 50
-            ) {
-                $title = $current->childNodes[0]->childNodes[0]->nodeValue;
-                $firstRowIndex = 1;
-            } else {
-                $title = null;
+                if(strlen($current->childNodes[0]->childNodes[0]->nodeValue) > 50) {
+                    // This is a note, add it to our most recent group
+                    $groups->last()->addNote(
+                        // A note might have multiple child nodes due to <br> tags, gather them up with line break characters
+                        collect($current->childNodes[0]->childNodes[0]->childNodes)
+                            ->map->nodeValue
+                            ->filter()
+                            ->implode("\n")
+                    );
+
+                    continue;
+                } else {
+                    // This is a group title
+                    $title = $current->childNodes[0]->childNodes[0]->nodeValue;
+                    $firstRowIndex = 1;
+                }
             }
 
             // See if this table has a header row

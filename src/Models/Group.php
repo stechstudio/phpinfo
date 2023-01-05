@@ -10,12 +10,19 @@ class Group implements JsonSerializable
 {
     use Slugifies;
 
+    protected $note = null;
+
     public function __construct(
         protected Collection $configs,
         protected ?Collection $headings = null,
         protected $name = null
     )
     {}
+
+    public function addNote($note): void
+    {
+        $this->note = $note;
+    }
 
     public function key(): string
     {
@@ -27,6 +34,11 @@ class Group implements JsonSerializable
     public function name(): string|null
     {
         return $this->name;
+    }
+
+    public function note(): string|null
+    {
+        return $this->note;
     }
 
     public function configs(): Collection
@@ -68,7 +80,8 @@ class Group implements JsonSerializable
             "name" => $this->name(),
             "headings" => $this->headings(),
             "shortHeadings" => $this->headings()->map(fn($heading) => $this->shorten($heading)),
-            "configs" => $this->configs()->values()
+            "configs" => $this->configs()->values(),
+            "note" => $this->note()
         ];
     }
 }

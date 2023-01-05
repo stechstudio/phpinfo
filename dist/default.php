@@ -133,6 +133,8 @@
                                             </tbody>
                                         </table>
                                     </div>
+                                    <div x-show="group.note" x-html='group.note ? group.note.replaceAll("\n","<br>") : ""'
+                                         class="my-4 text-xs md:text-sm md:bg-slate-200 md:dark:bg-slate-800 p-4 md:rounded-md md:shadow dark:shadow-none"></div>
                                 </div>
                             </template>
                         </section>
