@@ -19,9 +19,6 @@
     <style>
         <?php include(__DIR__ . "/styles.css"); ?>
     </style>
-    <script type="module">
-        <?php include(__DIR__ . "/app.js"); ?>
-    </script>
 </head>
 
 <body class="antialiased font-sans text-slate-700 dark:text-slate-400">
@@ -38,8 +35,8 @@
                 <div x-show="!searchFocused && isUnfiltered()" class="absolute top-0 right-0 mt-2 mr-4 bg-slate-200 dark:bg-slate-600 rounded px-2 py-1 text-xs text-slate-500 dark:text-slate-400">/</div>
             </div>
         </div>
-        <div class="flex-1 flex justify-end items-center gap-4 text-slate-400">
-            <button @click="showMobileNav()" class="md:hidden p-2 -mr-2 border border-slate-300 dark:border-slate-700 rounded">
+        <div class="flex-1 flex justify-end items-center gap-4">
+            <button @click="showMobileNav()" class="md:hidden p-2 -mr-2 text-slate-400 border border-slate-300 dark:border-slate-700 rounded">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                 </svg>
@@ -102,7 +99,7 @@
                                                     :class="hash == config.key && 'bg-yellow-100 dark:bg-sky-900'">
                                                     <td class="lg:w-1/4 flex-shrink-0 align-top py-2 lg:py-4 pl-6 lg:pl-4 font-semibold text-slate-500">
                                                         <a :id="config.key" :href="'#' + config.key"
-                                                           class="inline-flex items-center gap-2 group hover:text-black dark:hover:text-slate-200 inline-block active:ring-1 active:ring-indigo-500 scroll-mt-14 md:scroll-mt-8"
+                                                           class="inline-flex items-center gap-2 group hover:text-black dark:hover:text-slate-200 inline-block active:ring-1 active:ring-slate-500 scroll-mt-14 md:scroll-mt-8"
                                                            :class="hash == config.key && 'dark:text-slate-200'"
                                                         >
                                                             <span x-html="highlighted(config.name)"></span>
@@ -160,6 +157,8 @@
     </div>
 </div>
 <script>
+
+
     document.addEventListener('alpine:init', () => {
         Alpine.data('Navigation', () => ({
             hash: null,
@@ -294,6 +293,9 @@
             }
         }))
     });
+</script>
+<script type="module">
+    <?php include(__DIR__ . "/app.js"); ?>
 </script>
 </body>
 </html>
