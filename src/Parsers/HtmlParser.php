@@ -24,6 +24,8 @@ class HtmlParser extends Result
 
     protected function parse(): void
     {
+        //dd(new Module('Credits', $this->findGroupedConfigsFor($this->xpath()->query('//body//h1')[2])));
+
         $this->version = str_replace('PHP Version ', '', $this->xpath()->query('//body//h1')[0]->nodeValue);
 
         // For modules, we start by looking at all <h2> tags
@@ -44,6 +46,10 @@ class HtmlParser extends Result
                 )
             ]))
         );
+
+        $this->modules->push(
+            new Module('Credits', $this->findGroupedConfigsFor($this->xpath()->query('//body//h1')[2]))
+        );
     }
 
     protected function findGroupedConfigsFor(DOMElement $heading): Collection
@@ -54,11 +60,45 @@ class HtmlParser extends Result
         // Modules often have multiple tables, we need to keep looking at siblings until it's no longer a table
         while ($current->nextSibling->nodeName === "table") {
             $current = $current->nextSibling;
+            $firstRowIndex = 0;
+
+            // See if this table has a title
+            if(
+                // If there is a single column in our first row, it could be a title OR a license note (like mbstring)
+                $current->childNodes[0]->childNodes->length === 1
+                // The only way to really know it check the length, titles will be short
+                && strlen($current->childNodes[0]->childNodes[0]->nodeValue) < 50
+            ) {
+                $title = $current->childNodes[0]->childNodes[0]->nodeValue;
+                $firstRowIndex = 1;
+            } else {
+                $title = null;
+            }
 
             // See if this table has a header row
-            $headings = in_array($current->childNodes[0]->firstChild->nodeValue, ['Directive', 'Variable'])
-                ? collect($current->childNodes[0]->childNodes)->map->nodeValue
+            $headings = in_array($current->childNodes[$firstRowIndex]?->firstChild->nodeValue, ['Directive', 'Variable', 'Contribution', 'Module'])
+                ? collect($current->childNodes[$firstRowIndex]->childNodes)->map->nodeValue
                 : collect();
+
+            // We don't want to handle empty tables
+            if($current->childNodes[$firstRowIndex] === null) {
+                continue;
+            }
+
+            // See if this table just has values (some credits tables are like this)
+            if($current->childNodes[$firstRowIndex]->childNodes->length === 1) {
+                $groups->push(
+                    new Group(
+                        collect([
+                            new Config('Names', $current->childNodes[$firstRowIndex]->childNodes[0]->nodeValue)
+                        ]),
+                        $headings,
+                        $title
+                    )
+                );
+
+                continue;
+            }
 
             $groups->push(
                 new Group(
@@ -71,7 +111,8 @@ class HtmlParser extends Result
                         ->map(fn(DOMElement $row) => $this->rowToValues($row))
                         // And turn into a Config object
                         ->map(fn(Collection $values) => Config::fromValues($values)),
-                    $headings
+                    $headings,
+                    $title
                 )
             );
         }

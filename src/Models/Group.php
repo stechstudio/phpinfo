@@ -9,9 +9,15 @@ class Group implements JsonSerializable
 {
     public function __construct(
         protected Collection $configs,
-        protected ?Collection $headings = null
+        protected ?Collection $headings = null,
+        protected $title = null
     )
     {}
+
+    public function title(): string|null
+    {
+        return $this->title;
+    }
 
     public function configs(): Collection
     {
@@ -48,7 +54,7 @@ class Group implements JsonSerializable
     public function jsonSerialize(): mixed
     {
         return [
-            "hasHeadings" => $this->hasHeadings(),
+            "title" => $this->title(),
             "headings" => $this->headings(),
             "shortHeadings" => $this->headings()->map(fn($heading) => $this->shorten($heading)),
             "configs" => $this->configs()->values()
