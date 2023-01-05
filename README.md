@@ -79,7 +79,7 @@ foreach($info->modules() AS $module) {
     
     // Configs are grouped the same way phpinfo() groups them by table
     // Different groups have different table headers, different number of values
-    foreach($modules->groups AS $group) {
+    foreach($module->groups() AS $group) {
         $group->headings(); // [Directive, Local Value, Master Value]
         
         foreach($group->configs() AS $config) {
