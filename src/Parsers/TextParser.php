@@ -22,11 +22,12 @@ class TextParser extends Result
 
         // phpinfo() helpfully gives us this big line, separating the general info, modules, and credits/license
         [$general, $modules, $creditsAndLicense] = explode("_______________________________________________________________________", $this->contents);
-        [$credits, $license] = explode("PHP License", $creditsAndLicense);
+        [$credits, $license] = explode("\nPHP License\n", $creditsAndLicense);
 
         $this->parseModules($modules);
         $this->parseGeneral($general);
         $this->parseCredits($credits);
+        $this->parseLicense($license);
     }
 
     protected function parseGeneral($contents): void
@@ -50,12 +51,17 @@ class TextParser extends Result
 
     protected function parseModules($contents)
     {
+        $contents = str_replace("\nModule Name\n", "", $contents);
+
         // Find our module names (surrounded by line breaks, and no assignment "=>" character)
         // We're going to stick a line above each module name to make it easier to explode module
         // content up.
         $contents = preg_replace_callback("/\n([^=()]*)\n\n/", function ($matches) {
             return "\n----------\n" . trim($matches[1]) . "\n";
         }, trim($contents));
+
+        // This one is a bit odd, since Additional Modules can be empty, and we have module headers together
+        $contents = str_replace("\n\nEnvironment\n", "\n----------\nEnvironment\n", $contents);
 
         $lines = array_slice(explode("\n----------\n", $contents), 1);
 
@@ -114,6 +120,17 @@ class TextParser extends Result
         );
     }
 
+    protected function parseLicense($contents)
+    {
+        $contents = str_replace("---", "\n", str_replace("\n", " ", str_replace("\n\n", "---", $contents)));
+
+        $this->modules->push(
+            new Module("License", collect([
+                (new Group(collect()))->addNote(trim($contents))
+            ]))
+        );
+    }
+
     protected function regexMatch($pattern, $subject): string
     {
         preg_match($pattern, $subject, $matches);
@@ -123,7 +140,7 @@ class TextParser extends Result
 
     protected function splitIntoGroups(Collection $lines): Collection
     {
-        $name = str_contains($lines[0], "=>")
+        $name = isset($lines[0]) && str_contains($lines[0], "=>")
             ? null
             : $lines->shift();
 
