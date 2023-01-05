@@ -106,7 +106,7 @@ class HtmlParser extends Result
                         // We only want <tr> nodes
                         ->filter(fn($node) => $node instanceof DOMElement && $node->nodeName === "tr" && $node->childNodes->length > 1)
                         // Get rid of header rows
-                        ->reject(fn(DOMElement $node) => in_array($node->firstChild->nodeValue, ['Directive', 'Variable']))
+                        ->reject(fn(DOMElement $node) => in_array($node->firstChild->nodeValue, ['Directive', 'Variable', 'Contribution', 'Module']))
                         // Parse out the field values
                         ->map(fn(DOMElement $row) => $this->rowToValues($row))
                         // And turn into a Config object

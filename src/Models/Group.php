@@ -4,19 +4,29 @@ namespace STS\Phpinfo\Models;
 
 use Illuminate\Support\Collection;
 use JsonSerializable;
+use STS\Phpinfo\Traits\Slugifies;
 
 class Group implements JsonSerializable
 {
+    use Slugifies;
+
     public function __construct(
         protected Collection $configs,
         protected ?Collection $headings = null,
-        protected $title = null
+        protected $name = null
     )
     {}
 
-    public function title(): string|null
+    public function key(): string
     {
-        return $this->title;
+        return $this->name()
+            ? "group_" . $this->slugify($this->name())
+            : "group_" . md5($this->configs()->map->name()->implode(','));
+    }
+
+    public function name(): string|null
+    {
+        return $this->name;
     }
 
     public function configs(): Collection
@@ -54,7 +64,8 @@ class Group implements JsonSerializable
     public function jsonSerialize(): mixed
     {
         return [
-            "title" => $this->title(),
+            "key" => $this->key(),
+            "name" => $this->name(),
             "headings" => $this->headings(),
             "shortHeadings" => $this->headings()->map(fn($heading) => $this->shorten($heading)),
             "configs" => $this->configs()->values()

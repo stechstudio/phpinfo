@@ -81,9 +81,16 @@
                                 </a>
                             </h2>
 
-                            <template x-for="(group, index) in module.groups" :key="'group' + index">
-                                <div x-show="group.shouldShow">
-                                    <h3 x-show="group.title" class="text-lg my-4" x-text="group.title"></h3>
+                            <template x-for="group in module.groups" :key="group.key">
+                                <div x-show="group.shouldShow" :id="group.key" class="md:scroll-mt-8">
+                                    <h3 x-show="group.name" class="pl-6 md:pl-0 text-lg my-4">
+                                        <a :href="'#' + group.key" class="group inline-flex items-center gap-2">
+                                            <span x-text="group.name"></span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-4 h-4 opacity-50">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                                            </svg>
+                                        </a>
+                                    </h3>
                                     <div class="table-wrapper md:shadow dark:shadow-none md:rounded-md overflow-hidden bg-white dark:bg-slate-800/60 md:dark:ring-1 dark:ring-slate-700 dark:ring-inset">
                                         <table class="w-full text-sm">
                                             <thead>
@@ -180,7 +187,7 @@
 
                 document.addEventListener('alpine:initialized', () => {
                     if(this.hash) {
-                        document.querySelector(`#${this.hash}`).scrollIntoView();
+                        document.querySelector(`#${this.hash}`) && document.querySelector(`#${this.hash}`).scrollIntoView();
                         this.selectModule(this.isModule(this.hash) ? this.hash : this.firstSectionVisible());
                     } else {
                         this.selectModule(this.firstSectionVisible());
