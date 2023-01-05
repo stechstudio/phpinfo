@@ -103,7 +103,7 @@
                                                     :class="hash == config.key && 'bg-yellow-100'">
                                                     <td class="lg:w-1/4 flex-shrink-0 align-top py-2 lg:py-4 pl-6 lg:pl-4 font-semibold text-slate-500">
                                                         <a :id="config.key" :href="'#' + config.key"
-                                                           class="inline-flex items-center gap-2 group hover:text-black inline-block active:ring-1 active:ring-indigo-500 scroll-mt-14 md:scroll-mt-8">
+                                                           class="inline-flex items-center gap-2 group hover:text-black dark:hover:text-slate-200 inline-block active:ring-1 active:ring-indigo-500 scroll-mt-14 md:scroll-mt-8">
                                                             <span x-html="highlighted(config.name)"></span>
 
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-3 h-3  opacity-50">
