@@ -100,10 +100,12 @@
                                             <template x-for="config in group.configs" :key="config.key">
                                                 <tr class="flex flex-col py-2 lg:py-0 lg:table-row border-b border-slate-200 dark:border-slate-700/75"
                                                     x-show="config.shouldShow"
-                                                    :class="hash == config.key && 'bg-yellow-100'">
+                                                    :class="hash == config.key && 'bg-yellow-100 dark:bg-sky-900'">
                                                     <td class="lg:w-1/4 flex-shrink-0 align-top py-2 lg:py-4 pl-6 lg:pl-4 font-semibold text-slate-500">
                                                         <a :id="config.key" :href="'#' + config.key"
-                                                           class="inline-flex items-center gap-2 group hover:text-black dark:hover:text-slate-200 inline-block active:ring-1 active:ring-indigo-500 scroll-mt-14 md:scroll-mt-8">
+                                                           class="inline-flex items-center gap-2 group hover:text-black dark:hover:text-slate-200 inline-block active:ring-1 active:ring-indigo-500 scroll-mt-14 md:scroll-mt-8"
+                                                           :class="hash == config.key && 'dark:text-slate-200'"
+                                                        >
                                                             <span x-html="highlighted(config.name)"></span>
 
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-3 h-3  opacity-50">
@@ -178,24 +180,18 @@
                 document.addEventListener('alpine:initialized', () => {
                     if(this.hash) {
                         document.querySelector(`#${this.hash}`).scrollIntoView();
-                        this.selectModule(this.isModule(this.hash) ? this.hash : this.firstModuleVisible());
+                        this.selectModule(this.isModule(this.hash) ? this.hash : this.firstSectionVisible());
                     } else {
-                        this.selectModule(this.firstModuleVisible());
+                        this.selectModule(this.firstSectionVisible());
                     }
 
                     document.querySelector(`#nav_${this.selected}`).scrollIntoView({block: "center"});
                     this.initialized = true;
                 });
 
-                this.$watch('search', () => {
-                    if(this.isFiltered()) {
-                        this.applyVisibleFlags();
-                    } else {
-                        this.allVisible();
-                    }
-                });
-
                 this.allVisible();
+
+                this.$watch('search', () => this.isFiltered() ? this.applyVisibleFlags() : this.allVisible());
             },
             allVisible() {
                 this.info.modules.forEach((module) => {
@@ -231,7 +227,7 @@
             isUnfiltered() {
                 return this.search == null || this.search == '';
             },
-            firstModuleVisible() {
+            firstSectionVisible() {
                 let first = Array.from(document.querySelectorAll('section')).filter((section) =>
                     section && section.getBoundingClientRect().bottom > 100
                 )[0];
@@ -248,7 +244,7 @@
             leave(key) {
                 let index = this.sections.indexOf(key);
 
-                if (this.initialized && (this.selectedIndex == null || this.selectedIndex == index || this.selectedNoLongerVisible())) {
+                if (this.initialized && (this.selectedIndex == null || this.selectedIndex == this.sections.indexOf(key) || this.selectedNoLongerVisible())) {
                     this.selectNextIndex();
                 }
             },
@@ -268,7 +264,7 @@
             selectNextIndex() {
                 if(this.isUnfiltered()) return this.select(this.selectedIndex + 1);
 
-                this.selectModule(this.firstModuleVisible());
+                this.selectModule(this.firstSectionVisible());
             },
             selectModule(key) {
                 if(this.isModule(key)) this.select(this.sections.indexOf(key));
@@ -293,11 +289,9 @@
                 this.mobileNav = false;
             },
             highlighted(text) {
-                if(this.isUnfiltered()) return text;
-
-                if(text == null) return null;
-
-                return text.replace(new RegExp(this.search,"gi"), "<mark>$&</mark>");
+                return this.isUnfiltered() || text == null
+                    ? text
+                    : text.replace(new RegExp(this.search,"gi"), "<mark>$&</mark>");
             }
         }))
     });
