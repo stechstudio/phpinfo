@@ -4,7 +4,7 @@ This package will get the output from `phpinfo()` and provide you with:
 
 1. Lookup methods for inspecting specific modules and configs
 2. Collection-based data structure for iterating over and building your own custom output
-3. A pretty, opinionated output page that replaces the default `phpinfo()` output
+3. A pretty, responsive, searchable interface that replaces the default `phpinfo()` page
 
 ## Installation
 
