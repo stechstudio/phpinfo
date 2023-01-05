@@ -24,22 +24,22 @@
     </script>
 </head>
 
-<body class="antialiased font-sans text-slate-700">
+<body class="antialiased font-sans text-slate-700 dark:text-slate-400">
 <div class="" x-data='Navigation' @keydown.window.slash.prevent="$refs.search.focus();">
-    <header class="fixed top-0 h-16 lg:h-20 w-full flex items-center justify-between shadow py-4 px-6 xl:px-8 bg-white z-10">
+    <header class="fixed top-0 h-16 lg:h-20 w-full flex items-center justify-between shadow py-4 px-6 xl:px-8 z-10 bg-white dark:bg-slate-800 dark:border-b border-slate-700">
         <div class="flex-1 md:flex items-center gap-2">
-            <img class="h-6 md:h-10" src="data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -1 100 50'%3E%3Cpath d='m7.579 10.123 14.204 0c4.169 0.035 7.19 1.237 9.063 3.604 1.873 2.367 2.491 5.6 1.855 9.699-0.247 1.873-0.795 3.71-1.643 5.512-0.813 1.802-1.943 3.427-3.392 4.876-1.767 1.837-3.657 3.003-5.671 3.498-2.014 0.495-4.099 0.742-6.254 0.742l-6.36 0-2.014 10.07-7.367 0 7.579-38.001 0 0m6.201 6.042-3.18 15.9c0.212 0.035 0.424 0.053 0.636 0.053 0.247 0 0.495 0 0.742 0 3.392 0.035 6.219-0.3 8.48-1.007 2.261-0.742 3.781-3.321 4.558-7.738 0.636-3.71 0-5.848-1.908-6.413-1.873-0.565-4.222-0.83-7.049-0.795-0.424 0.035-0.83 0.053-1.219 0.053-0.353 0-0.724 0-1.113 0l0.053-0.053'/%3E%3Cpath d='m41.093 0 7.314 0-2.067 10.123 6.572 0c3.604 0.071 6.289 0.813 8.056 2.226 1.802 1.413 2.332 4.099 1.59 8.056l-3.551 17.649-7.42 0 3.392-16.854c0.353-1.767 0.247-3.021-0.318-3.763-0.565-0.742-1.784-1.113-3.657-1.113l-5.883-0.053-4.346 21.783-7.314 0 7.632-38.054 0 0'/%3E%3Cpath d='m70.412 10.123 14.204 0c4.169 0.035 7.19 1.237 9.063 3.604 1.873 2.367 2.491 5.6 1.855 9.699-0.247 1.873-0.795 3.71-1.643 5.512-0.813 1.802-1.943 3.427-3.392 4.876-1.767 1.837-3.657 3.003-5.671 3.498-2.014 0.495-4.099 0.742-6.254 0.742l-6.36 0-2.014 10.07-7.367 0 7.579-38.001 0 0m6.201 6.042-3.18 15.9c0.212 0.035 0.424 0.053 0.636 0.053 0.247 0 0.495 0 0.742 0 3.392 0.035 6.219-0.3 8.48-1.007 2.261-0.742 3.781-3.321 4.558-7.738 0.636-3.71 0-5.848-1.908-6.413-1.873-0.565-4.222-0.83-7.049-0.795-0.424 0.035-0.83 0.053-1.219 0.053-0.353 0-0.724 0-1.113 0l0.053-0.053'/%3E%3C/svg%3E%0A"/>
+            <img class="h-6 md:h-10 dark:invert" src="data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -1 100 50'%3E%3Cpath d='m7.579 10.123 14.204 0c4.169 0.035 7.19 1.237 9.063 3.604 1.873 2.367 2.491 5.6 1.855 9.699-0.247 1.873-0.795 3.71-1.643 5.512-0.813 1.802-1.943 3.427-3.392 4.876-1.767 1.837-3.657 3.003-5.671 3.498-2.014 0.495-4.099 0.742-6.254 0.742l-6.36 0-2.014 10.07-7.367 0 7.579-38.001 0 0m6.201 6.042-3.18 15.9c0.212 0.035 0.424 0.053 0.636 0.053 0.247 0 0.495 0 0.742 0 3.392 0.035 6.219-0.3 8.48-1.007 2.261-0.742 3.781-3.321 4.558-7.738 0.636-3.71 0-5.848-1.908-6.413-1.873-0.565-4.222-0.83-7.049-0.795-0.424 0.035-0.83 0.053-1.219 0.053-0.353 0-0.724 0-1.113 0l0.053-0.053'/%3E%3Cpath d='m41.093 0 7.314 0-2.067 10.123 6.572 0c3.604 0.071 6.289 0.813 8.056 2.226 1.802 1.413 2.332 4.099 1.59 8.056l-3.551 17.649-7.42 0 3.392-16.854c0.353-1.767 0.247-3.021-0.318-3.763-0.565-0.742-1.784-1.113-3.657-1.113l-5.883-0.053-4.346 21.783-7.314 0 7.632-38.054 0 0'/%3E%3Cpath d='m70.412 10.123 14.204 0c4.169 0.035 7.19 1.237 9.063 3.604 1.873 2.367 2.491 5.6 1.855 9.699-0.247 1.873-0.795 3.71-1.643 5.512-0.813 1.802-1.943 3.427-3.392 4.876-1.767 1.837-3.657 3.003-5.671 3.498-2.014 0.495-4.099 0.742-6.254 0.742l-6.36 0-2.014 10.07-7.367 0 7.579-38.001 0 0m6.201 6.042-3.18 15.9c0.212 0.035 0.424 0.053 0.636 0.053 0.247 0 0.495 0 0.742 0 3.392 0.035 6.219-0.3 8.48-1.007 2.261-0.742 3.781-3.321 4.558-7.738 0.636-3.71 0-5.848-1.908-6.413-1.873-0.565-4.222-0.83-7.049-0.795-0.424 0.035-0.83 0.053-1.219 0.053-0.353 0-0.724 0-1.113 0l0.053-0.053'/%3E%3C/svg%3E%0A"/>
             <div class="text-sm md:text-xl font-light text-slate-500">v<?php echo $info->version() ?></div>
         </div>
         <div class="flex-1 flex justify-center">
             <div class="relative group">
-                <input type="search" class="w-48 md:w-72 lg:w-96 bg-slate-100 rounded-full px-4 py-2 text-sm md:text-base border border-slate-100 focus:outline-0 focus:bg-white focus:border-slate-400"
+                <input type="search" class="w-48 md:w-72 lg:w-96 rounded-full px-4 py-2 text-sm md:text-base border border-slate-100 dark:border-slate-700 focus:outline-0 focus:bg-white focus:border-slate-400 dark:focus:bg-slate-600 dark:focus:text-slate-100 bg-slate-100 dark:bg-slate-700"
                        placeholder="Type to search..." x-model.debounce="search" x-ref="search" @keydown.stop="" x-on:focus="searchFocused = true" x-on:blur="searchFocused = false"/>
-                <div x-show="!searchFocused && isUnfiltered()" class="absolute top-0 right-0 mt-2 mr-4 bg-white rounded px-2 py-1 text-xs text-slate-500">/</div>
+                <div x-show="!searchFocused && isUnfiltered()" class="absolute top-0 right-0 mt-2 mr-4 bg-slate-200 dark:bg-slate-600 rounded px-2 py-1 text-xs text-slate-500 dark:text-slate-400">/</div>
             </div>
         </div>
         <div class="flex-1 flex justify-end items-center gap-4 text-slate-400">
-            
+
             <button @click="showMobileNav()" class="md:hidden p-2 -mr-2 border border-slate-300 rounded">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -48,7 +48,7 @@
         </div>
     </header>
 
-    <div class="fixed w-full top-16 lg:top-20 bottom-0 overflow-y-auto bg-slate-100">
+    <div class="fixed w-full top-16 lg:top-20 bottom-0 overflow-y-auto bg-slate-100 dark:bg-slate-900">
         <div x-cloak x-show="emptyState" class="max-w-3xl mx-auto mt-20 flex gap-4 justify-center text-slate-500 text-xl">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -63,7 +63,7 @@
                     <a x-show="module.shouldShow"
                        :id="'nav_' + module.key"
                        :href="'#' + module.key" @click=jump(module.key)
-                       class="px-4 py-1 rounded block" :class="selected == module.key ? 'bg-slate-200' : 'hover:bg-white'">
+                       class="px-4 py-1 rounded block" :class="selected == module.key ? 'bg-slate-200 dark:bg-slate-800' : 'hover:bg-white dark:hover:bg-black/25'">
                         <span x-text="module.name"></span>
                     </a>
                 </template>
@@ -76,7 +76,7 @@
                                  x-intersect:leave.margin.-100px="leave(module.key)"
                                  x-show="module.shouldShow"
                                  class="md:space-y-4 lg:space-y-8 md:mb-4 lg:mb-8 md:scroll-mt-8" :id="module.key">
-                            <h2 class="block text-xl font-bold text-slate-900 pl-6 md:pl-0 py-2 md:py-0 sticky md:relative top-0 bg-slate-100 border-b border-slate-200 md:border-0 z-20">
+                            <h2 class="block text-xl font-bold pl-6 md:pl-0 py-2 md:py-0 sticky md:relative top-0 border-b border-slate-200 md:border-0 z-20 bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-200">
                                 <a :href="'#' + module.key" @click="jump(module.key)" class="group inline-flex items-center gap-2">
                                     <span x-text="module.name"></span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-4 h-4 opacity-50">
@@ -86,10 +86,10 @@
                             </h2>
 
                             <template x-for="(group, index) in module.groups" :key="'group' + index">
-                                <div x-show="group.shouldShow" class="table-wrapper md:shadow md:rounded-md bg-white overflow-hidden">
+                                <div x-show="group.shouldShow" class="table-wrapper md:shadow dark:shadow-none md:rounded-md overflow-hidden bg-white dark:bg-slate-800/60 dark:ring-1 dark:ring-slate-700 dark:ring-inset">
                                     <table class="w-full text-sm">
                                         <thead>
-                                            <tr x-show="group && group.hasHeadings" class="hidden lg:table-row bg-slate-200 text-slate-700">
+                                            <tr x-show="group && group.hasHeadings" class="hidden lg:table-row bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
                                                 <th class="text-left font-semibold py-2 px-4"><span x-text="group.headings[0]"></span></th>
                                                 <th class="text-left font-semibold py-2 px-4"><span x-text="group.headings[1]"></span></th>
                                                 <th x-show="group.headings.length == 3" class="text-left font-semibold py-2 px-4"><span x-text="group.headings[2]"></span></th>
@@ -98,7 +98,7 @@
 
                                         <tbody class="">
                                             <template x-for="config in group.configs" :key="config.key">
-                                                <tr class="flex flex-col py-2 lg:py-0 lg:table-row border-b border-slate-200"
+                                                <tr class="flex flex-col py-2 lg:py-0 lg:table-row border-b border-slate-200 dark:border-slate-700/75"
                                                     x-show="config.shouldShow"
                                                     :class="hash == config.key && 'bg-yellow-100'">
                                                     <td class="lg:w-1/4 flex-shrink-0 align-top py-2 lg:py-4 pl-6 lg:pl-4 font-semibold text-slate-500">
