@@ -39,8 +39,7 @@
             </div>
         </div>
         <div class="flex-1 flex justify-end items-center gap-4 text-slate-400">
-
-            <button @click="showMobileNav()" class="md:hidden p-2 -mr-2 border border-slate-300 rounded">
+            <button @click="showMobileNav()" class="md:hidden p-2 -mr-2 border border-slate-300 dark:border-slate-700 rounded">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                 </svg>
@@ -137,7 +136,7 @@
     </div>
 
     <div x-cloak x-transition.opacity x-show="mobileNav" class="fixed inset-0 overflow-hidden bg-slate-900/50 backdrop-blur-sm z-20">
-        <div x-show="mobileNav" @click.away="hideMobileNav()" class="fixed top-0 bottom-0 right-0 w-80 bg-slate-800 z-30 ">
+        <div x-show="mobileNav" @click.away="hideMobileNav()" class="fixed top-0 bottom-0 right-0 w-80 bg-slate-800 dark:bg-slate-700 z-30 ">
             <nav class="absolute inset-0 overflow-y-auto p-6 pt-16 space-y-px text-white">
                 <template x-for="module in info.modules" :key="module.key">
                     <a x-show="module.shouldShow"
@@ -150,8 +149,8 @@
                 </template>
             </nav>
 
-            <div class="absolute top-0 left-0 right-0 flex justify-end bg-gradient-to-b from-slate-800 via-slate-800 to-transparent">
-                <button @click="hideMobileNav()" class="mt-3 mr-4 p-2 bg-slate-800 text-slate-400 border border-slate-600 rounded">
+            <div class="absolute top-0 left-0 right-0 flex justify-end bg-gradient-to-b from-slate-800 dark:from-slate-700 via-slate-800/75 dark:via-slate-700/75 to-transparent">
+                <button @click="hideMobileNav()" class="mt-3 mr-4 p-2 bg-slate-800 dark:bg-slate-700 text-slate-400 border border-slate-600 rounded">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
