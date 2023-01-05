@@ -50,6 +50,15 @@ class HtmlParser extends Result
         $this->modules->push(
             new Module('Credits', $this->findGroupedConfigsFor($this->xpath()->query('//body//h1')[2]))
         );
+
+        $this->modules->push(
+            new Module('License', collect([
+                (new Group(collect()))->addNote(
+                    collect(collect($this->xpath()->query('//body//table//td'))->last()->childNodes)
+                        ->map->nodeValue->implode("\n")
+                )
+            ]))
+        );
     }
 
     protected function findGroupedConfigsFor(DOMElement $heading): Collection

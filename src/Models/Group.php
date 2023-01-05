@@ -19,9 +19,11 @@ class Group implements JsonSerializable
     )
     {}
 
-    public function addNote($note): void
+    public function addNote($note): self
     {
         $this->note = $note;
+
+        return $this;
     }
 
     public function key(): string

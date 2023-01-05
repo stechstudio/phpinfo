@@ -91,7 +91,8 @@
                                             </svg>
                                         </a>
                                     </h3>
-                                    <div class="table-wrapper md:shadow dark:shadow-none md:rounded-md overflow-hidden bg-white dark:bg-slate-800/60 md:dark:ring-1 dark:ring-slate-700 dark:ring-inset">
+                                    <div x-show="group.configs.length > 0"
+                                         class="table-wrapper md:shadow dark:shadow-none md:rounded-md overflow-hidden bg-white dark:bg-slate-800/60 md:dark:ring-1 dark:ring-slate-700 dark:ring-inset">
                                         <table class="w-full text-sm">
                                             <thead>
                                                 <tr x-show="group && group.headings.length > 0" class="hidden lg:table-row bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
