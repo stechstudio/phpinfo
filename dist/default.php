@@ -76,7 +76,7 @@
                                  x-intersect:leave.margin.-100px="leave(module.key)"
                                  x-show="module.shouldShow"
                                  class="md:space-y-4 lg:space-y-8 md:mb-4 lg:mb-8 md:scroll-mt-8" :id="module.key">
-                            <h2 class="block text-xl font-bold pl-6 md:pl-0 py-2 md:py-0 sticky md:relative top-0 border-b border-slate-200 md:border-0 z-20 bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-200">
+                            <h2 class="block text-xl font-bold pl-6 md:pl-0 py-2 md:py-0 sticky md:relative top-0 border-b border-slate-200 dark:border-slate-700 md:border-0 z-20 bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-200">
                                 <a :href="'#' + module.key" @click="jump(module.key)" class="group inline-flex items-center gap-2">
                                     <span x-text="module.name"></span>
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-4 h-4 opacity-50">
@@ -86,7 +86,7 @@
                             </h2>
 
                             <template x-for="(group, index) in module.groups" :key="'group' + index">
-                                <div x-show="group.shouldShow" class="table-wrapper md:shadow dark:shadow-none md:rounded-md overflow-hidden bg-white dark:bg-slate-800/60 dark:ring-1 dark:ring-slate-700 dark:ring-inset">
+                                <div x-show="group.shouldShow" class="table-wrapper md:shadow dark:shadow-none md:rounded-md overflow-hidden bg-white dark:bg-slate-800/60 md:dark:ring-1 dark:ring-slate-700 dark:ring-inset">
                                     <table class="w-full text-sm">
                                         <thead>
                                             <tr x-show="group && group.hasHeadings" class="hidden lg:table-row bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
@@ -113,12 +113,12 @@
                                                     </td>
                                                     <td class="py-2 lg:py-4 px-6 lg:px-4" style="overflow-wrap: anywhere"
                                                         :class="config.localValue == null && 'text-slate-400 italic'">
-                                                        <span x-show="group.hasHeadings" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-green-100 text-green-700 font-semibold rounded" x-text="group.shortHeadings[1]"></span>
+                                                        <span x-show="group.hasHeadings" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs font-semibold rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200" x-text="group.shortHeadings[1]"></span>
                                                         <span x-html="highlighted(config.localValue)"></span>
                                                     </td>
                                                     <td x-show="config.hasMasterValue" class="py-2 lg:py-4 px-6 lg:px-4" style="overflow-wrap: anywhere"
                                                         :class="config.masterValue == null && 'text-slate-400 italic'">
-                                                        <span x-show="group.hasHeadings" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs bg-blue-100 text-blue-700 font-semibold rounded" x-text="group.shortHeadings[2]"></span>
+                                                        <span x-show="group.hasHeadings" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs font-semibold rounded  bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200" x-text="group.shortHeadings[2]"></span>
                                                         <span x-html="highlighted(config.masterValue)"></span>
                                                     </td>
                                                 </tr>
