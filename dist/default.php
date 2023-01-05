@@ -6,7 +6,7 @@
 // $info = STS\Phpinfo\Info::capture();
 ?>
 <!doctype html>
-<html>
+<html class="dark:[color-scheme:dark]">
 
 <head>
     <meta charset="utf-8">
