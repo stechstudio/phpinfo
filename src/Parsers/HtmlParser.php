@@ -24,8 +24,6 @@ class HtmlParser extends Result
 
     protected function parse(): void
     {
-        //dd(new Module('Credits', $this->findGroupedConfigsFor($this->xpath()->query('//body//h1')[2])));
-
         $this->version = str_replace('PHP Version ', '', $this->xpath()->query('//body//h1')[0]->nodeValue);
 
         // For modules, we start by looking at all <h2> tags
@@ -47,17 +45,24 @@ class HtmlParser extends Result
             ]))
         );
 
+        // Credits
         $this->modules->push(
-            new Module('Credits', $this->findGroupedConfigsFor($this->xpath()->query('//body//h1')[2]))
+            new Module(
+                $this->xpath()->query('//body//h1')[2]->nodeValue,
+                $this->findGroupedConfigsFor($this->xpath()->query('//body//h1')[2]))
         );
 
+        // License
         $this->modules->push(
-            new Module('License', collect([
-                (new Group(collect()))->addNote(
-                    collect(collect($this->xpath()->query('//body//table//td'))->last()->childNodes)
-                        ->map->nodeValue->implode("\n")
-                )
-            ]))
+            new Module(
+                collect($this->xpath()->query('//body//h2'))->last()->nodeValue,
+                collect([
+                    Group::noteOnly(
+                        collect(collect($this->xpath()->query('//body//table//td'))->last()->childNodes)
+                                ->map->nodeValue->implode("\n\n")
+                    )
+                ])
+            )
         );
     }
 

@@ -112,7 +112,7 @@
                                                                class="inline-flex items-center gap-2 group hover:text-black dark:hover:text-slate-200 inline-block active:ring-1 active:ring-slate-500 scroll-mt-14 md:scroll-mt-8"
                                                                :class="hash == config.key && 'dark:text-slate-200'"
                                                             >
-                                                                <span x-html="highlighted(config.name)"></span>
+                                                                <span x-html="formatted(config.name)"></span>
 
                                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden group-hover:inline w-3 h-3  opacity-50">
                                                                   <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
@@ -122,12 +122,12 @@
                                                         <td class="py-2 lg:py-4 px-6 lg:px-4" style="overflow-wrap: anywhere"
                                                             :class="config.localValue == null && 'text-slate-400 italic'">
                                                             <span x-show="group.headings.length > 0" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs font-semibold rounded bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200" x-text="group.shortHeadings[1]"></span>
-                                                            <span x-html="highlighted(config.localValue)"></span>
+                                                            <span x-html="formatted(config.localValue)"></span>
                                                         </td>
                                                         <td x-show="config.hasMasterValue" class="py-2 lg:py-4 px-6 lg:px-4" style="overflow-wrap: anywhere"
                                                             :class="config.masterValue == null && 'text-slate-400 italic'">
                                                             <span x-show="group.headings.length > 0" class="empty:hidden inline-block w-14 text-center lg:hidden py-1 mr-1 text-xs font-semibold rounded  bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200" x-text="group.shortHeadings[2]"></span>
-                                                            <span x-html="highlighted(config.masterValue)"></span>
+                                                            <span x-html="formatted(config.masterValue)"></span>
                                                         </td>
                                                     </tr>
                                                 </template>
@@ -299,7 +299,9 @@
                 document.body.style = "";
                 this.mobileNav = false;
             },
-            highlighted(text) {
+            formatted(text) {
+                if(text) text = text.replaceAll("\n", "<br>");
+
                 return this.isUnfiltered() || text == null
                     ? text
                     : text.replace(new RegExp(this.search,"gi"), "<mark>$&</mark>");

@@ -3,6 +3,7 @@
 namespace STS\Phpinfo\Parsers;
 
 use Illuminate\Support\Collection;
+use STS\Phpinfo\Collections\Lines;
 use STS\Phpinfo\Models\Config;
 use STS\Phpinfo\Models\Group;
 use STS\Phpinfo\Models\Module;
@@ -10,6 +11,8 @@ use STS\Phpinfo\Result;
 
 class TextParser extends Result
 {
+    protected Lines $lines;
+
     public static function canParse(string $contents): bool
     {
         return str_contains(str_replace("\r\n", "\n", $contents), "phpinfo()\nPHP Version")
@@ -19,159 +22,159 @@ class TextParser extends Result
     protected function parse(): void
     {
         $this->contents = str_replace("\r\n", "\n", $this->contents);
+        $this->lines = new Lines(explode("\n", $this->contents));
 
-        // phpinfo() helpfully gives us this big line, separating the general info, modules, and credits/license
-        [$general, $modules, $creditsAndLicense] = explode("_______________________________________________________________________", $this->contents);
-        [$credits, $license] = explode("\nPHP License\n", $creditsAndLicense);
+        // Our first line is just phpinfo()
+        $this->lines->advance();
 
-        $this->parseModules($modules);
-        $this->parseGeneral($general);
-        $this->parseCredits($credits);
-        $this->parseLicense($license);
+        $this->version = explode(" => ", $this->lines->consume())[1];
+
+        // Ok now we start with General info
+        $this->modules = collect([$this->processModule('General')]);
+
+        // Now we have a divider
+        $this->lines->advance();
+
+        // Now go through all the rest
+        $this->processModules();
+        $this->lines->advance();
+
+        $this->modules->push($this->processCredits());
+        $this->modules->push($this->processLicense());
     }
 
-    protected function parseGeneral($contents): void
+    protected function processModules()
     {
-        $lines = explode("\n", $contents);
-
-        $this->version = $this->lineToValues($lines[1])->get(1);
-
-        $this->modules->prepend(
-            new Module('General', collect([
-                new Group(
-                    collect(array_slice($lines, 3))
-                        // We only care about key/value pairs
-                        ->filter(fn($line) => str_contains($line, " => "))
-                        // Parse out the key/value and create a Config instance
-                        ->map(fn($line) => Config::fromValues($this->lineToValues($line)))
-                )
-            ]))
-        );
+        while($this->lines->isModuleName()) {
+            $this->modules->push(
+                $this->processModule($this->lines->consume())
+            );
+        }
     }
 
-    protected function parseModules($contents)
+    protected function processModule($name)
     {
-        $contents = str_replace("\nModule Name\n", "", $contents);
-
-        // Find our module names (surrounded by line breaks, and no assignment "=>" character)
-        // We're going to stick a line above each module name to make it easier to explode module
-        // content up.
-        $contents = preg_replace_callback("/\n([^=()]*)\n\n/", function ($matches) {
-            return "\n----------\n" . trim($matches[1]) . "\n";
-        }, trim($contents));
-
-        // This one is a bit odd, since Additional Modules can be empty, and we have module headers together
-        $contents = str_replace("\n\nEnvironment\n", "\n----------\nEnvironment\n", $contents);
-
-        $lines = array_slice(explode("\n----------\n", $contents), 1);
-
-        $this->modules = collect($lines)
-            // Get lines, and filter out empty strings
-            ->map(fn($text) => collect(explode("\n", $text))->filter())
-            // Each array of lines will start with the module name, and then the configs
-            ->map(fn($lines) => new Module(
-                $lines->shift(),
-                $this->splitIntoGroups($lines)
-            ));
+        return new Module($name, $this->processGroups());
     }
 
-    protected function parseCredits($contents)
+    protected function processGroups()
     {
         $groups = collect();
 
-        // First let's divide up the big obvious sections
-        [
-            $groupLanguage,
-            $phpAuthors,
-            $sapiModules,
-            $moduleAuthors,
-            $phpDocsQA,
-            $website
-        ] = explode("\n        ", trim(str_replace("PHP Credits\n", "", $contents)));
+        while($group = $this->processGroup()) {
+            $groups->push($group);
+        }
 
-        // PHP Docs and QA Team are combined, let's split those up
-        [$phpDocs, $qaTeam] = explode("\n\n", $phpDocsQA);
+        return $groups;
+    }
 
-        // This first section has two simple groups, we'll get this out of the way
-        $lines = explode("\n", trim($groupLanguage));
-        $groups->push(Group::simple($lines[0], 'Names', $lines[1])); // PHP Group
-        $groups->push(Group::simple($lines[3], 'Names', $lines[4])); // Language Design & Concept
+    protected function processGroup(): Group|false
+    {
+        $configs = collect();
+        $headings = collect();
+        $name = null;
+        $note = null;
 
-        // These next sections have groups with both titles and headings
-        collect([$phpAuthors, $sapiModules, $moduleAuthors, $phpDocs])
-            // Get our lines
-            ->map(fn($section) => collect(explode("\n", trim($section))))
-            // Each array of lines will start with the module name, and then the configs
-            ->map(fn($lines) => $this->splitIntoGroups($lines))
-            // We'll get a collection of groups, but there's only one
-            ->each(fn(Collection $results) => $groups->push($results->first()));
+        // If we have a group title, it comes first
+        if($this->lines->isGroupTitle()) {
+            $name = $this->lines->consume();
+        }
 
-        // Ok, now we have another simple group
-        $lines = explode("\n", trim($qaTeam));
-        $groups->push(Group::simple($lines[0], 'Names', $lines[1])); // PHP Quality Assurance Team
+        // Then headings, optionally
+        if($this->lines->isTableHeading()) {
+            $headings = collect(explode(" => ", $this->lines->consume()));
+        }
 
-        // And finally our last section
-        $groups->push(
-            $this->splitIntoGroups(collect(explode("\n", trim($website))))->first()
+        // We should have config entries with items by now, or else we can't proceed
+        if(!$this->lines->hasItems()) {
+            return false;
+        }
+
+        $count = $this->lines->items()->count();
+
+        while($config = $this->processConfig()) {
+            $configs->push($config);
+
+            if($this->lines->items()->count() !== $count) {
+                // The number of values just changed, we need to start a new group
+                break;
+            }
+        }
+
+        if($this->lines->isNote()) {
+            $note = $this->lines->consumeUntil(fn($line) => $line === '')->filter()->implode("\n");
+            $this->lines->advance();
+        }
+
+        return new Group($configs, $headings, $name, trim($note));
+    }
+
+    protected function processConfig(): Config|false
+    {
+        if(!$this->lines->hasItems()) {
+            return false;
+        }
+
+        $items = $this->lines->consumeItems();
+
+        // A value might be split across multiple lines, each ending with a comma
+        while(str_ends_with($items->localValue(), ",")) {
+            $items->appendLocalValue("\n" . $this->lines->consume());
+        }
+
+        // A value might be an Array dump, across multiple lines
+        if(str_ends_with($items->localValue(), "Array")) {
+            $items->appendLocalValue(
+                "\n" . $this->lines->consumeUntil(fn($line) => $line == ")")->implode("\n")
+            );
+        }
+
+        return Config::fromValues($items);
+    }
+
+    protected function processCredits(): Module
+    {
+        // Our credit groups are a bit odd. Some are simple with just a list of names, which can look
+        // like a "note" to this parser. We're going to walk through each of these manually.
+
+        $moduleName = $this->lines->consume();
+        $groups = collect();
+
+        // PHP Group
+        $groups->push(Group::simple($this->lines->consume(), "Names", $this->lines->consume()));
+
+        // Language Design & Concept
+        $groups->push(Group::simple($this->lines->consume(), "Names", $this->lines->consume()));
+
+        // PHP Authors
+        $groups->push($this->processGroup());
+        // SAPI Modules
+        $groups->push($this->processGroup());
+        // Module Authors
+        $groups->push($this->processGroup());
+        // PHP Documentation
+        $groups->push($this->processGroup());
+
+        // PHP Quality Assurance Team
+        $groups->push(Group::simple($this->lines->consume(), "Names", $this->lines->consume()));
+
+        // Websites and Infrastructure team
+        $groups->push($this->processGroup());
+
+        return new Module($moduleName, $groups);
+    }
+
+    protected function processLicense(): Module
+    {
+        return new Module(
+            $this->lines->consume(),
+            collect([
+                Group::noteOnly(
+                    $this->lines
+                        ->consumeUntil(fn($line) => str_contains($line, 'license@php.net'))
+                        ->implode("\n")
+                )]
+            )
         );
-
-        $this->modules->push(
-            new Module("Credits", $groups)
-        );
-    }
-
-    protected function parseLicense($contents)
-    {
-        $contents = str_replace("---", "\n", str_replace("\n", " ", str_replace("\n\n", "---", $contents)));
-
-        $this->modules->push(
-            new Module("License", collect([
-                (new Group(collect()))->addNote(trim($contents))
-            ]))
-        );
-    }
-
-    protected function regexMatch($pattern, $subject): string
-    {
-        preg_match($pattern, $subject, $matches);
-
-        return $matches[1];
-    }
-
-    protected function splitIntoGroups(Collection $lines): Collection
-    {
-        $name = isset($lines[0]) && str_contains($lines[0], "=>")
-            ? null
-            : $lines->shift();
-
-        return $lines
-            ->map(fn($line) => $this->lineToValues($line))
-            // Break our lines into groups based on how many variables they have
-            ->partition(fn(Collection $values) => $values->count() === 2)
-            // Sometimes we get a partitioned group that is empty, get ride of those
-            ->filter(fn(Collection $groupedValues) => $groupedValues->count())
-            // Now turn our grouped values into Group instances
-            ->map(fn(Collection $groupedValues) => $this->buildGroup($groupedValues, $name));
-    }
-
-    protected function buildGroup(Collection $lines, $name = null): Group
-    {
-        $headings = in_array($lines->first()->first(), ['Directive', 'Variable', 'Contribution', 'Module'])
-            ? $lines->first()
-            : collect();
-
-        return new Group(
-            $lines
-                ->reject(fn(Collection $values) => in_array($values->first(), ['Directive', 'Variable', 'Contribution', 'Module']))
-                ->map(fn(Collection $values) => Config::fromValues($values)),
-            $headings,
-            $name
-        );
-    }
-
-    protected function lineToValues($line): Collection
-    {
-        return collect(explode(" => ", $line))
-            ->map(fn($part) => trim($part));
     }
 }

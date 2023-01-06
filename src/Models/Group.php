@@ -27,6 +27,11 @@ class Group implements JsonSerializable
         );
     }
 
+    public static function noteOnly($note)
+    {
+        return (new static(collect()))->addNote($note);
+    }
+
     public function addNote($note): self
     {
         $this->note = $note;
