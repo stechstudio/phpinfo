@@ -105,15 +105,26 @@ class Lines extends Collection
     {
         return !$this->hasItems()
             && $this->nextIsBlank()
+            && !$this->isGroupTitle()
             && strlen($this->current()) < 50;
     }
 
     public function isGroupTitle(): bool
     {
-        if(str_contains($this->current(), "                     ")) {
+        // Some group titles have obvious signals
+        if(
+            str_contains($this->current(), "                     ")
+            || in_array($this->current(), ["Module Name"])
+        ) {
             return true;
         }
 
+        // Some look like group titles but aren't
+        if(in_array($this->current(), ["PHP License"])) {
+            return false;
+        }
+
+        // Otherwise we have a pattern
         return !$this->hasItems()
             && !$this->nextIsBlank()
             && strlen($this->current()) < 50;
@@ -156,5 +167,15 @@ class Lines extends Collection
         $this->advance();
 
         return $items;
+    }
+
+    public function startAt($contents): string|null
+    {
+        if($index = $this->search($contents)) {
+            $this->index = $index;
+            return $this->current();
+        }
+
+        return null;
     }
 }

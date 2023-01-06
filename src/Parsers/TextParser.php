@@ -2,7 +2,6 @@
 
 namespace STS\Phpinfo\Parsers;
 
-use Illuminate\Support\Collection;
 use STS\Phpinfo\Collections\Lines;
 use STS\Phpinfo\Models\Config;
 use STS\Phpinfo\Models\Group;
@@ -16,7 +15,7 @@ class TextParser extends Result
     public static function canParse(string $contents): bool
     {
         return str_contains(str_replace("\r\n", "\n", $contents), "phpinfo()\nPHP Version")
-            && count(explode("_______________________________________________________________________", $contents)) === 3;
+            && count(explode("_______________________________________________________________________", $contents)) >= 2;
     }
 
     protected function parse(): void
@@ -27,7 +26,7 @@ class TextParser extends Result
         // Our first line is just phpinfo()
         $this->lines->advance();
 
-        $this->version = explode(" => ", $this->lines->consume())[1];
+        $this->version = $this->lines->consumeItems()->last();
 
         // Ok now we start with General info
         $this->modules = collect([$this->processModule('General')]);
@@ -39,8 +38,9 @@ class TextParser extends Result
         $this->processModules();
         $this->lines->advance();
 
-        $this->modules->push($this->processCredits());
-        $this->modules->push($this->processLicense());
+        // These will find and jump to the right spot, should it exist
+        $this->processCredits();
+        $this->processLicense();
     }
 
     protected function processModules()
@@ -127,13 +127,20 @@ class TextParser extends Result
             $items->appendLocalValue(
                 "\n" . $this->lines->consumeUntil(fn($line) => $line == ")")->implode("\n")
             );
+
+            $this->lines->advance();
         }
 
         return Config::fromValues($items);
     }
 
-    protected function processCredits(): Module
+    protected function processCredits(): void
     {
+        // First make sure we have credits
+        if(!$this->lines->startAt("PHP Credits")) {
+            return;
+        }
+
         // Our credit groups are a bit odd. Some are simple with just a list of names, which can look
         // like a "note" to this parser. We're going to walk through each of these manually.
 
@@ -161,20 +168,25 @@ class TextParser extends Result
         // Websites and Infrastructure team
         $groups->push($this->processGroup());
 
-        return new Module($moduleName, $groups);
+        $this->modules->push(new Module($moduleName, $groups));
     }
 
-    protected function processLicense(): Module
+    protected function processLicense(): void
     {
-        return new Module(
+        // First make sure we have a license, and jump to that position
+        if(!$this->lines->startAt("PHP License")) {
+            return;
+        }
+
+        $this->modules->push(new Module(
             $this->lines->consume(),
             collect([
                 Group::noteOnly(
                     $this->lines
                         ->consumeUntil(fn($line) => str_contains($line, 'license@php.net'))
                         ->implode("\n")
-                )]
-            )
-        );
+                )
+            ])
+        ));
     }
 }
