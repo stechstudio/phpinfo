@@ -155,7 +155,7 @@ class HtmlParser extends Result
     {
         if(!isset($this->xpath)) {
             $document = new DOMDocument;
-            $document->loadHTML(str_replace(["\r\n","\n"], "", $this->contents));
+            $document->loadHTML(str_replace(["\r\n","\n"], "", $this->contents), LIBXML_NOERROR);
             $this->xpath = new DOMXpath($document);
         }
 
