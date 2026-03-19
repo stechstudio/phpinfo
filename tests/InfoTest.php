@@ -89,16 +89,16 @@ class InfoTest extends TestCase
     }
 
     #[Test]
-    public function betterphpinfo_function_exists(): void
+    public function prettyphpinfo_function_exists(): void
     {
-        $this->assertTrue(function_exists('betterphpinfo'));
+        $this->assertTrue(function_exists('prettyphpinfo'));
     }
 
     #[Test]
-    public function betterphpinfo_produces_output(): void
+    public function prettyphpinfo_produces_output(): void
     {
         ob_start();
-        betterphpinfo(INFO_GENERAL);
+        prettyphpinfo(INFO_GENERAL);
         $output = ob_get_clean();
 
         $this->assertStringContainsString('phpinfo()', $output);

@@ -1,4 +1,4 @@
-# Better PHP Info
+# Pretty PHP Info
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/stechstudio/phpinfo.svg?style=flat-square)](https://packagist.org/packages/stechstudio/phpinfo)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
@@ -19,13 +19,13 @@ composer require stechstudio/phpinfo
 
 ## Quickstart
 
-The simplest way to use this package is the global `betterphpinfo()` function — a drop-in replacement for `phpinfo()`:
+The simplest way to use this package is the global `prettyphpinfo()` function — a drop-in replacement for `phpinfo()`:
 
 ```php
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 
-betterphpinfo();
+prettyphpinfo();
 ```
 
 That's it. You'll get a pretty, searchable, dark-mode-ready page instead of the default `phpinfo()` output.
@@ -34,13 +34,13 @@ Just like the native `phpinfo()`, you can pass `INFO_*` constants to control whi
 
 ```php
 // Only show modules (excludes environment variables — useful for security)
-betterphpinfo(INFO_MODULES);
+prettyphpinfo(INFO_MODULES);
 
 // Only general information
-betterphpinfo(INFO_GENERAL);
+prettyphpinfo(INFO_GENERAL);
 
 // Combine flags
-betterphpinfo(INFO_GENERAL | INFO_MODULES);
+prettyphpinfo(INFO_GENERAL | INFO_MODULES);
 ```
 
 You can also use the class-based API directly:
