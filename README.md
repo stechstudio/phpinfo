@@ -91,8 +91,8 @@ $info->hasConfig('ICU version'); // true
 // a local and master value, the local is returned by default.
 $info->config('max_file_uploads'); // "20"
 
-// Pass 'master' as a second parameter to retrieve the master value instead.
-$info->config('max_file_uploads', 'master'); // "20"
+// Pass 'master' to get the php.ini default instead of the effective local value.
+$info->config('max_file_uploads', 'master'); // "100"
 $info->config('BCMath support', 'master'); // null
 
 // Convenience methods for common lookups
