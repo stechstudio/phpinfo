@@ -65,6 +65,47 @@ class InfoTest extends TestCase
     }
 
     #[Test]
+    public function capture_accepts_info_constants(): void
+    {
+        $full = Info::capture(INFO_ALL);
+        $general = Info::capture(INFO_GENERAL);
+
+        $this->assertGreaterThan(
+            $general->modules()->count(),
+            $full->modules()->count()
+        );
+
+        // INFO_GENERAL should still have version
+        $this->assertNotEmpty($general->version());
+    }
+
+    #[Test]
+    public function capture_with_info_modules_excludes_environment(): void
+    {
+        $info = Info::capture(INFO_MODULES);
+
+        $this->assertFalse($info->hasModule('Environment'));
+        $this->assertGreaterThan(0, $info->modules()->count());
+    }
+
+    #[Test]
+    public function betterphpinfo_function_exists(): void
+    {
+        $this->assertTrue(function_exists('betterphpinfo'));
+    }
+
+    #[Test]
+    public function betterphpinfo_produces_output(): void
+    {
+        ob_start();
+        betterphpinfo(INFO_GENERAL);
+        $output = ob_get_clean();
+
+        $this->assertStringContainsString('phpinfo()', $output);
+        $this->assertStringContainsString('</html>', $output);
+    }
+
+    #[Test]
     public function call_static_delegates_to_capture(): void
     {
         $version = Info::version();

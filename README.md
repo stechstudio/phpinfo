@@ -1,14 +1,10 @@
-# PHP info
+# Better PHP Info
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/stechstudio/phpinfo.svg?style=flat-square)](https://packagist.org/packages/stechstudio/phpinfo)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
 [![Tests](https://img.shields.io/github/actions/workflow/status/stechstudio/phpinfo/tests.yml?branch=main&style=flat-square&label=tests)](https://github.com/stechstudio/phpinfo/actions/workflows/tests.yml)
 
-This package will get the output from `phpinfo()` and provide you with:
-
-1. Lookup methods for inspecting specific modules and configs
-2. Collection-based data structure for iterating over and building your own custom output
-3. A pretty, responsive, searchable interface that replaces the default `phpinfo()` page
+A beautiful, searchable replacement for `phpinfo()`. Query PHP configuration programmatically or browse it in a modern UI with dark mode, instant search, and click-to-copy.
 
 ## Requirements
 
@@ -23,28 +19,47 @@ composer require stechstudio/phpinfo
 
 ## Quickstart
 
-If you want to display a pretty, mobile-friendly `phpinfo()` page, just call `render()` on the `Info` factory class:
+The simplest way to use this package is the global `betterphpinfo()` function — a drop-in replacement for `phpinfo()`:
 
 ```php
 <?php
-// Make sure this points to your composer autoload file, if you are using plain PHP.
-// If you are in a framework context, you can probably remove this line as your
-// framework likely handles it for you.
 require __DIR__ . '/../vendor/autoload.php';
 
-// This will capture your current phpinfo() and display a prettier page.
+betterphpinfo();
+```
+
+That's it. You'll get a pretty, searchable, dark-mode-ready page instead of the default `phpinfo()` output.
+
+Just like the native `phpinfo()`, you can pass `INFO_*` constants to control which sections are displayed:
+
+```php
+// Only show modules (excludes environment variables — useful for security)
+betterphpinfo(INFO_MODULES);
+
+// Only general information
+betterphpinfo(INFO_GENERAL);
+
+// Combine flags
+betterphpinfo(INFO_GENERAL | INFO_MODULES);
+```
+
+You can also use the class-based API directly:
+
+```php
 STS\Phpinfo\Info::render();
-?>
 ```
 
 ### Interact with `phpinfo()` configuration
 
-If you're looking to directly inspect and interact with the configuration, you need to first capture it:
+If you're looking to directly inspect and interact with the configuration, capture it first:
 
 ```php
 use STS\Phpinfo\Info;
 
 $info = Info::capture();
+
+// Or capture a subset
+$info = Info::capture(INFO_MODULES);
 ```
 
 If you have `phpinfo()` output that you've saved previously and want to load and parse:
@@ -61,27 +76,28 @@ $info = Info::fromText($yourSavedTextOutput);
 $info = Info::detect($yourSavedOutput);
 ```
 
-From here you can query some base info, modules, and configs:
+From here you can query base info, modules, and configs:
 ```php
 // Your PHP version
-$info->version(); // 8.3.0
+$info->version(); // "8.5.4"
 
 // Check for the presence of a specific module. Name is case-insensitive.
 $info->hasModule('redis'); // true
 
-// Check to see if a specific configuration key is present. Name is case-insensitive.
+// Check to see if a specific configuration key is present.
 $info->hasConfig('ICU version'); // true
 
-// Retrieve the value for a specific configuration key. Name is case-insensitive. If there is both a local and master value, the local is returned as default.
-$info->config('max_file_uploads'); // 5
+// Retrieve the value for a specific configuration key. If there is both
+// a local and master value, the local is returned by default.
+$info->config('max_file_uploads'); // "20"
 
-// Pass in 'master' as a second parameter to retrieve the master value instead. Note that this will return null if there is no master value;
-$info->config('max_file_uploads', 'master'); // 20
+// Pass 'master' as a second parameter to retrieve the master value instead.
+$info->config('max_file_uploads', 'master'); // "20"
 $info->config('BCMath support', 'master'); // null
 
 // Convenience methods for common lookups
-$info->os(); // Linux
-$info->hostname(); // my-server
+$info->os(); // "Linux"
+$info->hostname(); // "my-server"
 ```
 
 ## Iterating over data structure
@@ -90,73 +106,71 @@ You can access a data structure of [collections](https://laravel.com/docs/master
 
 ```php
 // Loop over defined modules
-foreach($info->modules() AS $module) {
-    $module->name(); // session
+foreach($info->modules() as $module) {
+    $module->name(); // "session"
     
     // Configs are grouped the same way phpinfo() groups them by table
-    // Different groups have different table headers, different number of values
-    foreach($module->groups() AS $group) {
-        $group->headings(); // [Directive, Local Value, Master Value]
+    foreach($module->groups() as $group) {
+        $group->headings(); // ["Directive", "Local Value", "Master Value"]
         
-        foreach($group->configs() AS $config) {
-            $config->name(); // session.gc_maxlifetime
-            $config->localValue(); // 1440
+        foreach($group->configs() as $config) {
+            $config->name(); // "session.gc_maxlifetime"
+            $config->localValue(); // "1440"
             
-            $config->hasMasterValue(); // true (will be false if there is only one value)
-            $config->masterValue(); // 28800
+            $config->hasMasterValue(); // true
+            $config->masterValue(); // "28800"
         }
     }
 }
 ```
 
-You see that we have four levels to the data structure:
+The data structure has four levels:
 
-1. Base `info` containing `modules()`
-2. Modules with `name()` method, and containing `groups()`
-3. Groups containing `configs()` and optionally with `headings()`
-4. Configs with `name()`, `value()/localValue()`, and optionally `masterValue()`
+1. `PhpInfo` containing `modules()`
+2. Modules with `name()`, containing `groups()`
+3. Groups containing `configs()` and optionally `headings()`
+4. Configs with `name()`, `value()`/`localValue()`, and optionally `masterValue()`
 
-You can _also_ access configs directly from the Module and base Info levels:
+You can also access configs directly from the Module and PhpInfo levels:
 
 ```php
-// This flattens the grouped 'session' configs down to a single collection
+// Flatten grouped configs for a single module
 $info->module('session')->configs();
 
-// This flattens ALL configs across all modules down to a single collection
+// Flatten ALL configs across all modules
 $info->configs();
 ```
 
 ### Modules and Groups
 
-We've already seen how to iterate over modules and groups. Sometimes you may want to look up a specific module and inspect it directly.
+Look up a specific module and inspect it directly:
 
 ```php
-// This lookup is case-insensitive. Will return null if no matching module is found.
+// Case-insensitive lookup. Returns null if not found.
 $module = $info->module('zend opcache');
 
-// Retrieve the name of the module as displayed in phpinfo(), which might have a different case.
-$module->name(); // Zend OPcache
+// Retrieve the name as displayed in phpinfo()
+$module->name(); // "Zend OPcache"
 
-// Flatten all configs into one collection. You can then use any Laravel collection method.
+// Flatten all configs into one collection
 $module->configs()->count(); // 59
 
-// Retrieve a specific configuration from this module. This works exactly the same as the main `config()` method shown in the previous section.
-$module->config('Max keys'); // 16229
-$module->config('opcache.enable_file_override', 'master'); // Off
+// Query a specific config from this module
+$module->config('Max keys'); // "16229"
+$module->config('opcache.enable_file_override', 'master'); // "Off"
 
-// Retrieve just the first group of configs, which is often the list of single-value configs
-$group = $info->module('session')->groups()->first(); // Collection of Configs
+// Access individual groups
+$group = $info->module('session')->groups()->first();
 ```
 
-
-Here is a super simple example to display modules and configuration:
+### Simple example
 
 ```php
-foreach ($info->modules() AS $module) {
+foreach ($info->modules() as $module) {
     echo '<h2>' . $module->name() . '</h2>';
 
     echo '<ul>';
-    foreach($module->configs() AS $config) {
+    foreach($module->configs() as $config) {
         echo '<li>';
         echo $config->name() . ': ' . $config->value();
         if($config->hasMasterValue()) {

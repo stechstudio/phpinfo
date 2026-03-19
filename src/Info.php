@@ -8,10 +8,10 @@ use STS\Phpinfo\Parsers\TextParser;
 
 abstract class Info
 {
-    public static function capture(): PhpInfo
+    public static function capture(int $what = INFO_ALL): PhpInfo
     {
         ob_start();
-        phpinfo();
+        phpinfo($what);
         $contents = ob_get_clean();
 
         return PHP_SAPI === 'cli'

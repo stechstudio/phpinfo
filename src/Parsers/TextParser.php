@@ -22,8 +22,9 @@ class TextParser implements Parser
 
     public static function canParse(string $contents): bool
     {
-        return str_contains(str_replace("\r\n", "\n", $contents), "phpinfo()\nPHP Version")
-            && count(explode('_______________________________________________________________________', $contents)) >= 2;
+        $normalized = str_replace("\r\n", "\n", $contents);
+
+        return str_starts_with($normalized, "phpinfo()\n");
     }
 
     public function parse(): PhpInfo
@@ -33,25 +34,35 @@ class TextParser implements Parser
         // First line is "phpinfo()"
         $this->cursor->advance();
 
-        // PHP Version line
-        $version = $this->cursor->consumeItems()[1] ?? '';
-
-        // General info
-        $modules = collect([$this->parseModule('General')]);
-
-        // Divider
-        $this->cursor->advance();
-
-        // All other modules
-        while ($this->isModuleName()) {
-            $modules->push($this->parseModule($this->cursor->consume()));
+        // PHP Version line (may not be present with INFO_MODULES etc.)
+        $version = '';
+        if ($this->cursor->hasItems() && ($this->cursor->items()[0] ?? '') === 'PHP Version') {
+            $version = $this->cursor->consumeItems()[1] ?? '';
         }
 
-        $this->cursor->advance();
+        // General info (will be empty if phpinfo was called with a subset)
+        $modules = collect([$this->parseModule('General')])->filter(fn($m) => $m->configs()->isNotEmpty());
 
-        // Credits and License (optional sections)
-        $this->parseCredits($modules);
-        $this->parseLicense($modules);
+        if (!$this->cursor->isAtEnd()) {
+            // Skip divider line if present (not present with INFO_MODULES etc.)
+            if ($this->isDivider()) {
+                $this->cursor->advance();
+            }
+
+            // All other modules
+            while (!$this->cursor->isAtEnd() && $this->isModuleName()) {
+                $modules->push($this->parseModule($this->cursor->consume()));
+            }
+
+            // Skip trailing divider if present
+            if (!$this->cursor->isAtEnd() && $this->isDivider()) {
+                $this->cursor->advance();
+            }
+
+            // Credits and License (optional sections)
+            $this->parseCredits($modules);
+            $this->parseLicense($modules);
+        }
 
         return new PhpInfo($version, $modules);
     }
@@ -187,12 +198,22 @@ class TextParser implements Parser
 
     // ── Line type detection ──────────────────────────────────────────
 
+    protected function isDivider(): bool
+    {
+        return $this->cursor->current() !== null
+            && str_contains($this->cursor->current(), '_______________________________________________________________________');
+    }
+
     protected function isModuleName(): bool
     {
+        if ($this->cursor->current() === null) {
+            return false;
+        }
+
         return !$this->cursor->hasItems()
             && $this->cursor->next() === ''
             && !$this->isGroupTitle()
-            && strlen($this->cursor->current() ?? '') < 50;
+            && strlen($this->cursor->current()) < 50;
     }
 
     protected function isGroupTitle(): bool
