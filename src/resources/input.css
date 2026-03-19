@@ -2,6 +2,8 @@
 
 @source "../../dist/*.php";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 [x-cloak] {
     display: none !important;
 }
