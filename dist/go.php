@@ -15,7 +15,7 @@
 // ── Capture phpinfo (safe subset only) ────────────────────────────────
 
 ob_start();
-phpinfo(INFO_GENERAL | INFO_CONFIGURATION | INFO_MODULES);
+phpinfo();
 $raw = ob_get_clean();
 
 // ── Minimal text parser (no dependencies) ─────────────────────────────
