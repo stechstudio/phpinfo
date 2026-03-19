@@ -1,8 +1,8 @@
 # PHP info
 
-[![Tests](https://github.com/stechstudio/phpinfo/actions/workflows/tests.yml/badge.svg)](https://github.com/stechstudio/phpinfo/actions/workflows/tests.yml)
-[![Latest Stable Version](https://img.shields.io/packagist/v/stechstudio/phpinfo.svg)](https://packagist.org/packages/stechstudio/phpinfo)
-[![License](https://img.shields.io/packagist/l/stechstudio/phpinfo.svg)](https://packagist.org/packages/stechstudio/phpinfo)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/stechstudio/phpinfo.svg?style=flat-square)](https://packagist.org/packages/stechstudio/phpinfo)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
+[![Tests](https://img.shields.io/github/actions/workflow/status/stechstudio/phpinfo/tests.yml?branch=main&style=flat-square&label=tests)](https://github.com/stechstudio/phpinfo/actions/workflows/tests.yml)
 
 This package will get the output from `phpinfo()` and provide you with:
 
