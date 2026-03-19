@@ -1,5 +1,9 @@
 # PHP info
 
+[![Tests](https://github.com/stechstudio/phpinfo/actions/workflows/tests.yml/badge.svg)](https://github.com/stechstudio/phpinfo/actions/workflows/tests.yml)
+[![Latest Stable Version](https://img.shields.io/packagist/v/stechstudio/phpinfo.svg)](https://packagist.org/packages/stechstudio/phpinfo)
+[![License](https://img.shields.io/packagist/l/stechstudio/phpinfo.svg)](https://packagist.org/packages/stechstudio/phpinfo)
+
 This package will get the output from `phpinfo()` and provide you with:
 
 1. Lookup methods for inspecting specific modules and configs
