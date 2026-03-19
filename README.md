@@ -6,6 +6,11 @@ This package will get the output from `phpinfo()` and provide you with:
 2. Collection-based data structure for iterating over and building your own custom output
 3. A pretty, responsive, searchable interface that replaces the default `phpinfo()` page
 
+## Requirements
+
+- PHP 8.3+
+- `ext-dom`
+
 ## Installation
 
 ```bash
@@ -46,13 +51,16 @@ use STS\Phpinfo\Info;
 $info = Info::fromHtml($yourSavedHtmlOutput);
 
 // If you've saved the CLI output from phpinfo()
-$info = Info::fromText($yourSavedHtmlOutput);
+$info = Info::fromText($yourSavedTextOutput);
+
+// Or if you don't know the format, let the package detect it
+$info = Info::detect($yourSavedOutput);
 ```
 
 From here you can query some base info, modules, and configs:
 ```php
 // Your PHP version
-$info->version(); // 8.2.0
+$info->version(); // 8.3.0
 
 // Check for the presence of a specific module. Name is case-insensitive.
 $info->hasModule('redis'); // true
@@ -66,6 +74,10 @@ $info->config('max_file_uploads'); // 5
 // Pass in 'master' as a second parameter to retrieve the master value instead. Note that this will return null if there is no master value;
 $info->config('max_file_uploads', 'master'); // 20
 $info->config('BCMath support', 'master'); // null
+
+// Convenience methods for common lookups
+$info->os(); // Linux
+$info->hostname(); // my-server
 ```
 
 ## Iterating over data structure
@@ -86,7 +98,7 @@ foreach($info->modules() AS $module) {
             $config->name(); // session.gc_maxlifetime
             $config->localValue(); // 1440
             
-            $config->hasMasterValue(); // True (will be false if there is only one value)
+            $config->hasMasterValue(); // true (will be false if there is only one value)
             $config->masterValue(); // 28800
         }
     }
