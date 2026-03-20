@@ -13,7 +13,7 @@ class InfoTest extends TestCase
     #[Test]
     public function from_html_returns_phpinfo(): void
     {
-        $html = file_get_contents(__DIR__ . '/fixtures/html-php83.html');
+        $html = file_get_contents(__DIR__.'/fixtures/html-php83.html');
         $info = Info::fromHtml($html);
 
         $this->assertInstanceOf(PhpInfo::class, $info);
@@ -22,7 +22,7 @@ class InfoTest extends TestCase
     #[Test]
     public function from_text_returns_phpinfo(): void
     {
-        $text = file_get_contents(__DIR__ . '/fixtures/cli-php83.txt');
+        $text = file_get_contents(__DIR__.'/fixtures/cli-php83.txt');
         $info = Info::fromText($text);
 
         $this->assertInstanceOf(PhpInfo::class, $info);
@@ -31,7 +31,7 @@ class InfoTest extends TestCase
     #[Test]
     public function detect_identifies_html(): void
     {
-        $html = file_get_contents(__DIR__ . '/fixtures/html-php83.html');
+        $html = file_get_contents(__DIR__.'/fixtures/html-php83.html');
         $info = Info::detect($html);
 
         $this->assertInstanceOf(PhpInfo::class, $info);
@@ -40,7 +40,7 @@ class InfoTest extends TestCase
     #[Test]
     public function detect_identifies_text(): void
     {
-        $text = file_get_contents(__DIR__ . '/fixtures/cli-php83.txt');
+        $text = file_get_contents(__DIR__.'/fixtures/cli-php83.txt');
         $info = Info::detect($text);
 
         $this->assertInstanceOf(PhpInfo::class, $info);

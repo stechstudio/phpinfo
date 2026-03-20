@@ -32,7 +32,7 @@ class PhpInfo implements JsonSerializable
         $slug = Str::slug($name);
 
         return $this->modules()
-            ->first(fn(Module $module) => Str::slug($module->name()) === $slug);
+            ->first(fn (Module $module) => Str::slug($module->name()) === $slug);
     }
 
     public function hasModule(string $name): bool
@@ -42,7 +42,7 @@ class PhpInfo implements JsonSerializable
 
     public function configs(): Items
     {
-        return $this->flatConfigs ??= $this->modules()->flatMap(fn(Module $m) => $m->configs());
+        return $this->flatConfigs ??= $this->modules()->flatMap(fn (Module $m) => $m->configs());
     }
 
     public function config(string $name, string $which = 'local'): ?string
@@ -78,7 +78,7 @@ class PhpInfo implements JsonSerializable
     public function render(): void
     {
         $info = $this;
-        include __DIR__ . '/../resources/template.php';
+        include __DIR__.'/../resources/template.php';
     }
 
     public function jsonSerialize(): mixed
@@ -94,6 +94,6 @@ class PhpInfo implements JsonSerializable
         $slug = Str::slug($name);
 
         return $this->configs()
-            ->first(fn(Config $config) => Str::slug($config->name()) === $slug);
+            ->first(fn (Config $config) => Str::slug($config->name()) === $slug);
     }
 }

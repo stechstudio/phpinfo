@@ -29,8 +29,8 @@ class Config implements JsonSerializable
     public function key(): string
     {
         return $this->name === 'Names'
-            ? 'config_names_' . md5((string) $this->localValue())
-            : 'config_' . Str::slug($this->name);
+            ? 'config_names_'.md5((string) $this->localValue())
+            : 'config_'.Str::slug($this->name);
     }
 
     public function name(): string

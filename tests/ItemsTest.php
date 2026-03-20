@@ -6,7 +6,6 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use STS\Phpinfo\Info;
 use STS\Phpinfo\Models\Config;
-use STS\Phpinfo\Models\Group;
 use STS\Phpinfo\Models\Module;
 use STS\Phpinfo\Support\Items;
 
@@ -24,7 +23,10 @@ class ItemsTest extends TestCase
     #[Test]
     public function it_creates_from_iterable(): void
     {
-        $generator = function () { yield 'a'; yield 'b'; };
+        $generator = function () {
+            yield 'a';
+            yield 'b';
+        };
         $items = new Items($generator());
 
         $this->assertEquals(2, $items->count());
@@ -34,7 +36,7 @@ class ItemsTest extends TestCase
     #[Test]
     public function it_creates_empty(): void
     {
-        $items = new Items();
+        $items = new Items;
 
         $this->assertTrue($items->isEmpty());
         $this->assertFalse($items->isNotEmpty());
@@ -54,7 +56,7 @@ class ItemsTest extends TestCase
     public function first_without_callback(): void
     {
         $this->assertEquals('a', (new Items(['a', 'b']))->first());
-        $this->assertNull((new Items())->first());
+        $this->assertNull((new Items)->first());
     }
 
     #[Test]
@@ -62,15 +64,15 @@ class ItemsTest extends TestCase
     {
         $items = new Items([1, 2, 3, 4]);
 
-        $this->assertEquals(3, $items->first(fn($v) => $v > 2));
-        $this->assertNull($items->first(fn($v) => $v > 10));
+        $this->assertEquals(3, $items->first(fn ($v) => $v > 2));
+        $this->assertNull($items->first(fn ($v) => $v > 10));
     }
 
     #[Test]
     public function last_without_callback(): void
     {
         $this->assertEquals('c', (new Items(['a', 'b', 'c']))->last());
-        $this->assertNull((new Items())->last());
+        $this->assertNull((new Items)->last());
     }
 
     #[Test]
@@ -78,8 +80,8 @@ class ItemsTest extends TestCase
     {
         $items = new Items([1, 2, 3, 4]);
 
-        $this->assertEquals(4, $items->last(fn($v) => $v > 2));
-        $this->assertNull($items->last(fn($v) => $v > 10));
+        $this->assertEquals(4, $items->last(fn ($v) => $v > 2));
+        $this->assertNull($items->last(fn ($v) => $v > 10));
     }
 
     #[Test]
@@ -95,7 +97,7 @@ class ItemsTest extends TestCase
     public function map(): void
     {
         $items = new Items([1, 2, 3]);
-        $mapped = $items->map(fn($v) => $v * 2);
+        $mapped = $items->map(fn ($v) => $v * 2);
 
         $this->assertEquals([2, 4, 6], $mapped->all());
         $this->assertEquals([1, 2, 3], $items->all()); // original unchanged
@@ -105,7 +107,7 @@ class ItemsTest extends TestCase
     public function flat_map(): void
     {
         $items = new Items([[1, 2], [3, 4]]);
-        $flat = $items->flatMap(fn($v) => $v);
+        $flat = $items->flatMap(fn ($v) => $v);
 
         $this->assertEquals([1, 2, 3, 4], $flat->all());
     }
@@ -114,7 +116,7 @@ class ItemsTest extends TestCase
     public function flat_map_with_empty_results(): void
     {
         $items = new Items([1, 2, 3]);
-        $flat = $items->flatMap(fn() => []);
+        $flat = $items->flatMap(fn () => []);
 
         $this->assertTrue($flat->isEmpty());
     }
@@ -123,7 +125,7 @@ class ItemsTest extends TestCase
     public function filter_with_callback(): void
     {
         $items = new Items([1, 2, 3, 4, 5]);
-        $filtered = $items->filter(fn($v) => $v > 3);
+        $filtered = $items->filter(fn ($v) => $v > 3);
 
         $this->assertEquals([4, 5], $filtered->all());
     }
@@ -141,7 +143,7 @@ class ItemsTest extends TestCase
     public function reject(): void
     {
         $items = new Items([1, 2, 3, 4, 5]);
-        $rejected = $items->reject(fn($v) => $v > 3);
+        $rejected = $items->reject(fn ($v) => $v > 3);
 
         $this->assertEquals([1, 2, 3], $rejected->all());
     }
@@ -215,8 +217,8 @@ class ItemsTest extends TestCase
     {
         $items = new Items([1, 2, 3]);
 
-        $this->assertTrue($items->contains(fn($v) => $v > 2));
-        $this->assertFalse($items->contains(fn($v) => $v > 10));
+        $this->assertTrue($items->contains(fn ($v) => $v > 2));
+        $this->assertFalse($items->contains(fn ($v) => $v > 10));
     }
 
     #[Test]
@@ -272,8 +274,8 @@ class ItemsTest extends TestCase
     {
         $info = Info::capture();
         $names = $info->modules()
-            ->filter(fn(Module $m) => strlen($m->name()) < 5)
-            ->map(fn(Module $m) => $m->name());
+            ->filter(fn (Module $m) => strlen($m->name()) < 5)
+            ->map(fn (Module $m) => $m->name());
 
         $this->assertInstanceOf(Items::class, $names);
         $this->assertGreaterThan(0, $names->count());
@@ -314,10 +316,10 @@ class ItemsTest extends TestCase
         $info = Info::capture();
 
         $this->assertTrue(
-            $info->modules()->contains(fn(Module $m) => $m->name() === 'General')
+            $info->modules()->contains(fn (Module $m) => $m->name() === 'General')
         );
         $this->assertFalse(
-            $info->modules()->contains(fn(Module $m) => $m->name() === 'NonexistentModule')
+            $info->modules()->contains(fn (Module $m) => $m->name() === 'NonexistentModule')
         );
     }
 
@@ -327,7 +329,7 @@ class ItemsTest extends TestCase
         $info = Info::capture();
 
         // This is exactly how PhpInfo::configs() works internally
-        $allConfigs = $info->modules()->flatMap(fn(Module $m) => $m->configs());
+        $allConfigs = $info->modules()->flatMap(fn (Module $m) => $m->configs());
 
         $this->assertInstanceOf(Items::class, $allConfigs);
         $this->assertGreaterThan(50, $allConfigs->count());
@@ -340,8 +342,8 @@ class ItemsTest extends TestCase
         $info = Info::capture();
 
         $result = $info->configs()
-            ->filter(fn(Config $c) => $c->hasMasterValue())
-            ->map(fn(Config $c) => $c->name())
+            ->filter(fn (Config $c) => $c->hasMasterValue())
+            ->map(fn (Config $c) => $c->name())
             ->first();
 
         // There should be at least one config with a master value
@@ -365,7 +367,7 @@ class ItemsTest extends TestCase
     {
         $info = Info::capture();
         $keys = $info->modules()
-            ->map(fn(Module $m) => $m->key())
+            ->map(fn (Module $m) => $m->key())
             ->implode(',');
 
         $this->assertIsString($keys);
@@ -379,7 +381,7 @@ class ItemsTest extends TestCase
         $info = Info::capture();
 
         $withoutMaster = $info->configs()
-            ->reject(fn(Config $c) => $c->hasMasterValue());
+            ->reject(fn (Config $c) => $c->hasMasterValue());
 
         $this->assertGreaterThan(0, $withoutMaster->count());
         foreach ($withoutMaster as $config) {
@@ -391,7 +393,7 @@ class ItemsTest extends TestCase
     public function unique_on_mapped_values(): void
     {
         $info = Info::capture();
-        $allKeys = $info->modules()->map(fn(Module $m) => $m->key());
+        $allKeys = $info->modules()->map(fn (Module $m) => $m->key());
         $uniqueKeys = $allKeys->unique();
 
         $this->assertEquals($allKeys->count(), $uniqueKeys->count());

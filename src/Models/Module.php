@@ -15,7 +15,7 @@ class Module implements JsonSerializable
 
     public function key(): string
     {
-        return 'module_' . Str::slug($this->name);
+        return 'module_'.Str::slug($this->name);
     }
 
     public function name(): string
@@ -30,7 +30,7 @@ class Module implements JsonSerializable
 
     public function configs(): Items
     {
-        return $this->groups()->flatMap(fn(Group $g) => $g->configs());
+        return $this->groups()->flatMap(fn (Group $g) => $g->configs());
     }
 
     public function hasConfig(string $name): bool
@@ -45,7 +45,7 @@ class Module implements JsonSerializable
 
     public function combinedKeyFor(Config $config): string
     {
-        return $this->key() . '_' . $config->key();
+        return $this->key().'_'.$config->key();
     }
 
     public function jsonSerialize(): mixed
@@ -62,6 +62,6 @@ class Module implements JsonSerializable
         $slug = Str::slug($name);
 
         return $this->configs()
-            ->first(fn(Config $config) => Str::slug($config->name()) === $slug);
+            ->first(fn (Config $config) => Str::slug($config->name()) === $slug);
     }
 }

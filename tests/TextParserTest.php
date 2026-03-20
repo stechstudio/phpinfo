@@ -17,7 +17,7 @@ class TextParserTest extends TestCase
     {
         if (self::$info === null) {
             self::$info = Info::fromText(
-                file_get_contents(__DIR__ . '/fixtures/cli-php83.txt')
+                file_get_contents(__DIR__.'/fixtures/cli-php83.txt')
             );
         }
 
@@ -27,7 +27,7 @@ class TextParserTest extends TestCase
     #[Test]
     public function it_can_detect_text_content(): void
     {
-        $text = file_get_contents(__DIR__ . '/fixtures/cli-php83.txt');
+        $text = file_get_contents(__DIR__.'/fixtures/cli-php83.txt');
 
         $this->assertTrue(TextParser::canParse($text));
         $this->assertFalse(TextParser::canParse('not phpinfo'));
@@ -126,7 +126,7 @@ class TextParserTest extends TestCase
     public function it_handles_local_and_master_values(): void
     {
         $configWithMaster = self::info()->configs()
-            ->first(fn($config) => $config->hasMasterValue());
+            ->first(fn ($config) => $config->hasMasterValue());
 
         if ($configWithMaster) {
             $name = $configWithMaster->name();
@@ -195,7 +195,7 @@ class TextParserTest extends TestCase
     #[Test]
     public function modules_have_unique_keys(): void
     {
-        $keys = self::info()->modules()->map(fn($m) => $m->key());
+        $keys = self::info()->modules()->map(fn ($m) => $m->key());
         $uniqueKeys = $keys->unique();
 
         $this->assertEquals($keys->count(), $uniqueKeys->count());
@@ -204,7 +204,7 @@ class TextParserTest extends TestCase
     #[Test]
     public function it_handles_crlf_line_endings(): void
     {
-        $text = file_get_contents(__DIR__ . '/fixtures/cli-php83.txt');
+        $text = file_get_contents(__DIR__.'/fixtures/cli-php83.txt');
         $crlfText = str_replace("\n", "\r\n", $text);
 
         $info = Info::fromText($crlfText);
@@ -217,7 +217,7 @@ class TextParserTest extends TestCase
     public function it_produces_consistent_results_with_html_parser(): void
     {
         $htmlInfo = Info::fromHtml(
-            file_get_contents(__DIR__ . '/fixtures/html-php83.html')
+            file_get_contents(__DIR__.'/fixtures/html-php83.html')
         );
 
         $this->assertEquals($htmlInfo->version(), self::info()->version());

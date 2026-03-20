@@ -38,8 +38,8 @@ class Group implements JsonSerializable
     public function key(): string
     {
         return $this->name
-            ? 'group_' . Str::slug($this->name)
-            : 'group_' . md5($this->configs()->map(fn($c) => $c->name())->implode(','));
+            ? 'group_'.Str::slug($this->name)
+            : 'group_'.md5($this->configs()->map(fn ($c) => $c->name())->implode(','));
     }
 
     public function name(): ?string
@@ -83,7 +83,7 @@ class Group implements JsonSerializable
             'key' => $this->key(),
             'name' => $this->name(),
             'headings' => $this->headings(),
-            'shortHeadings' => $this->headings()->map(fn($heading) => $this->shorten($heading)),
+            'shortHeadings' => $this->headings()->map(fn ($heading) => $this->shorten($heading)),
             'configs' => $this->configs()->values(),
             'note' => $this->note(),
         ];

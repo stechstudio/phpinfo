@@ -61,13 +61,13 @@ $output = "<?php\n" . $inlined . "namespace {\n\n" . $source . "\n}\n";
 
 // Replace the include() calls with the actual file contents
 $output = str_replace(
-    '<?php include(__DIR__ . "/../dist/styles.css"); ?>',
+    "<?php include __DIR__.'/../dist/styles.css'; ?>",
     $css,
     $output
 );
 
 $output = str_replace(
-    '<?php include(__DIR__ . "/../dist/app.js"); ?>',
+    "<?php include __DIR__.'/../dist/app.js'; ?>",
     $js,
     $output
 );

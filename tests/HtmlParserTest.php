@@ -17,7 +17,7 @@ class HtmlParserTest extends TestCase
     {
         if (self::$info === null) {
             self::$info = Info::fromHtml(
-                file_get_contents(__DIR__ . '/fixtures/html-php83.html')
+                file_get_contents(__DIR__.'/fixtures/html-php83.html')
             );
         }
 
@@ -27,7 +27,7 @@ class HtmlParserTest extends TestCase
     #[Test]
     public function it_can_detect_html_content(): void
     {
-        $html = file_get_contents(__DIR__ . '/fixtures/html-php83.html');
+        $html = file_get_contents(__DIR__.'/fixtures/html-php83.html');
 
         $this->assertTrue(HtmlParser::canParse($html));
         $this->assertFalse(HtmlParser::canParse('not phpinfo'));
@@ -126,7 +126,7 @@ class HtmlParserTest extends TestCase
     public function it_handles_local_and_master_values(): void
     {
         $configWithMaster = self::info()->configs()
-            ->first(fn($config) => $config->hasMasterValue());
+            ->first(fn ($config) => $config->hasMasterValue());
 
         if ($configWithMaster) {
             $name = $configWithMaster->name();
@@ -161,8 +161,8 @@ class HtmlParserTest extends TestCase
     #[Test]
     public function it_handles_svg_elements_in_html(): void
     {
-        $infoWithSvg = Info::fromHtml(file_get_contents(__DIR__ . '/fixtures/html-php83-with-svg.html'));
-        $infoWithout = Info::fromHtml(file_get_contents(__DIR__ . '/fixtures/html-php83.html'));
+        $infoWithSvg = Info::fromHtml(file_get_contents(__DIR__.'/fixtures/html-php83-with-svg.html'));
+        $infoWithout = Info::fromHtml(file_get_contents(__DIR__.'/fixtures/html-php83.html'));
 
         $this->assertEquals(
             $infoWithout->modules()->count(),
@@ -216,7 +216,7 @@ class HtmlParserTest extends TestCase
     #[Test]
     public function modules_have_unique_keys(): void
     {
-        $keys = self::info()->modules()->map(fn($m) => $m->key());
+        $keys = self::info()->modules()->map(fn ($m) => $m->key());
         $uniqueKeys = $keys->unique();
 
         $this->assertEquals($keys->count(), $uniqueKeys->count());

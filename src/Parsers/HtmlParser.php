@@ -16,11 +16,11 @@ use STS\Phpinfo\Support\Items;
 
 class HtmlParser implements Parser
 {
-    protected DOMXpath $xpath;
+    protected DOMXPath $xpath;
 
     public function __construct(protected string $contents)
     {
-        if (!static::canParse($contents)) {
+        if (! static::canParse($contents)) {
             throw new InvalidArgumentException('Content provided does not appear to be valid phpinfo() HTML output');
         }
     }
@@ -36,15 +36,15 @@ class HtmlParser implements Parser
         $version = str_replace('PHP Version ', '', $this->xpath()->query('//body//h1')[0]->nodeValue);
 
         $modules = items($this->xpath()->query('//body//h2'))
-            ->reject(fn(DOMElement $heading) => $heading->nodeValue === 'PHP License')
-            ->map(fn(DOMElement $heading) => new Module($heading->nodeValue, $this->findGroupedConfigsFor($heading)));
+            ->reject(fn (DOMElement $heading) => $heading->nodeValue === 'PHP License')
+            ->map(fn (DOMElement $heading) => new Module($heading->nodeValue, $this->findGroupedConfigsFor($heading)));
 
         // General info comes from the second table, prepend it
         $modules->prepend(
             new Module('General', items([
                 new Group(
                     items($this->xpath()->query('//body//table[2]/tr'))
-                        ->map(fn(DOMElement $row) => new Config(
+                        ->map(fn (DOMElement $row) => new Config(
                             trim($row->firstChild->nodeValue),
                             trim($row->lastChild->nodeValue),
                         ))
@@ -69,7 +69,7 @@ class HtmlParser implements Parser
                     $lastH2->nodeValue,
                     items([
                         Group::noteOnly(
-                            items($lastTd->childNodes)->map(fn($n) => $n->nodeValue)->implode("\n\n")
+                            items($lastTd->childNodes)->map(fn ($n) => $n->nodeValue)->implode("\n\n")
                         ),
                     ])
                 )
@@ -94,10 +94,11 @@ class HtmlParser implements Parser
                     // This is a note — attach to the most recent group
                     $groups->last()?->addNote(
                         items($current->childNodes[0]->childNodes[0]->childNodes)
-                            ->map(fn($n) => $n->nodeValue)
+                            ->map(fn ($n) => $n->nodeValue)
                             ->filter()
                             ->implode("\n")
                     );
+
                     continue;
                 } else {
                     $title = $current->childNodes[0]->childNodes[0]->nodeValue;
@@ -112,7 +113,7 @@ class HtmlParser implements Parser
 
             // Detect header row
             $headings = in_array($current->childNodes[$firstRowIndex]?->firstChild->nodeValue, ['Directive', 'Variable', 'Contribution', 'Module'])
-                ? items($current->childNodes[$firstRowIndex]->childNodes)->map(fn($n) => $n->nodeValue)
+                ? items($current->childNodes[$firstRowIndex]->childNodes)->map(fn ($n) => $n->nodeValue)
                 : items();
 
             // Single-value rows (some credits tables)
@@ -122,15 +123,16 @@ class HtmlParser implements Parser
                     $headings,
                     $title,
                 ));
+
                 continue;
             }
 
             $groups->push(new Group(
                 items($current->childNodes)
-                    ->filter(fn($node) => $node instanceof DOMElement && $node->nodeName === 'tr' && $node->childNodes->length > 1)
-                    ->reject(fn(DOMElement $node) => in_array($node->firstChild->nodeValue, ['Directive', 'Variable', 'Contribution', 'Module']))
-                    ->map(fn(DOMElement $row) => $this->rowToValues($row))
-                    ->map(fn(array $values) => Config::fromValues($values)),
+                    ->filter(fn ($node) => $node instanceof DOMElement && $node->nodeName === 'tr' && $node->childNodes->length > 1)
+                    ->reject(fn (DOMElement $node) => in_array($node->firstChild->nodeValue, ['Directive', 'Variable', 'Contribution', 'Module']))
+                    ->map(fn (DOMElement $row) => $this->rowToValues($row))
+                    ->map(fn (array $values) => Config::fromValues($values)),
                 $headings,
                 $title,
             ));
@@ -159,18 +161,18 @@ class HtmlParser implements Parser
     protected function rowToValues(DOMElement $row): array
     {
         return items($row->childNodes)
-            ->reject(fn($node) => $node instanceof DOMText)
-            ->map(fn(DOMElement $cell) => trim($cell->nodeValue))
+            ->reject(fn ($node) => $node instanceof DOMText)
+            ->map(fn (DOMElement $cell) => trim($cell->nodeValue))
             ->values()
             ->all();
     }
 
     protected function xpath(): DOMXPath
     {
-        if (!isset($this->xpath)) {
-            $document = new DOMDocument();
+        if (! isset($this->xpath)) {
+            $document = new DOMDocument;
             $document->loadHTML(str_replace(["\r\n", "\n"], '', $this->contents), LIBXML_NOERROR);
-            $this->xpath = new DOMXpath($document);
+            $this->xpath = new DOMXPath($document);
         }
 
         return $this->xpath;

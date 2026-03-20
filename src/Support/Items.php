@@ -94,7 +94,7 @@ class Items implements Countable, IteratorAggregate, JsonSerializable
 
     public function reject(callable $callback): static
     {
-        return $this->filter(fn($item) => !$callback($item));
+        return $this->filter(fn ($item) => ! $callback($item));
     }
 
     public function each(callable $callback): static
@@ -152,7 +152,7 @@ class Items implements Countable, IteratorAggregate, JsonSerializable
 
     public function isNotEmpty(): bool
     {
-        return !$this->isEmpty();
+        return ! $this->isEmpty();
     }
 
     public function count(): int
@@ -168,7 +168,7 @@ class Items implements Countable, IteratorAggregate, JsonSerializable
     public function jsonSerialize(): array
     {
         return array_values(array_map(
-            fn($item) => $item instanceof JsonSerializable ? $item->jsonSerialize() : $item,
+            fn ($item) => $item instanceof JsonSerializable ? $item->jsonSerialize() : $item,
             $this->items
         ));
     }

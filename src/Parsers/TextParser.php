@@ -12,12 +12,14 @@ use STS\Phpinfo\Support\Items;
 class TextParser implements Parser
 {
     protected array $lines;
+
     protected int $pos;
+
     protected int $len;
 
     public function __construct(protected string $contents)
     {
-        if (!static::canParse($contents)) {
+        if (! static::canParse($contents)) {
             throw new InvalidArgumentException('Content provided does not appear to be valid phpinfo() text output');
         }
     }
@@ -61,12 +63,20 @@ class TextParser implements Parser
         // Module loop
         while ($this->pos < $this->len) {
             $line = $this->current();
-            if ($line === null) break;
-            if ($this->isDivider()) { $this->advance(); continue; }
-            if ($line === 'PHP Credits' || $line === 'PHP License') break;
+            if ($line === null) {
+                break;
+            }
+            if ($this->isDivider()) {
+                $this->advance();
+
+                continue;
+            }
+            if ($line === 'PHP Credits' || $line === 'PHP License') {
+                break;
+            }
 
             // Module name detection: no " => ", next line is blank, short text
-            if (!$this->hasItems() && strlen($line) < 80 && ($this->pos + 1 >= $this->len || $this->lines[$this->pos + 1] === '')) {
+            if (! $this->hasItems() && strlen($line) < 80 && ($this->pos + 1 >= $this->len || $this->lines[$this->pos + 1] === '')) {
                 $moduleName = $line;
                 $this->advance();
                 $modules->push($this->parseModule($moduleName));
@@ -80,7 +90,7 @@ class TextParser implements Parser
         $this->parseLicense($modules);
 
         // Filter out empty modules (e.g. "Module Name" under Additional Modules)
-        $modules = $modules->filter(fn(Module $m) => $m->groups()->isNotEmpty());
+        $modules = $modules->filter(fn (Module $m) => $m->groups()->isNotEmpty());
 
         return new PhpInfo($version, $modules);
     }
@@ -118,7 +128,9 @@ class TextParser implements Parser
 
         while ($this->pos < $this->len) {
             $group = $this->parseGroup();
-            if ($group === null) break;
+            if ($group === null) {
+                break;
+            }
             $groups->push($group);
         }
 
@@ -127,16 +139,26 @@ class TextParser implements Parser
 
     private function parseGroup(): ?Group
     {
-        if ($this->pos >= $this->len) return null;
+        if ($this->pos >= $this->len) {
+            return null;
+        }
         $line = $this->lines[$this->pos] ?? null;
-        if ($line === null) return null;
+        if ($line === null) {
+            return null;
+        }
 
         // Stop at dividers or blank-followed-by-short (module names)
-        if (str_contains($line, '_______________________________________________________________________')) return null;
-        if ($line === '') { $this->pos++; return $this->parseGroup(); }
+        if (str_contains($line, '_______________________________________________________________________')) {
+            return null;
+        }
+        if ($line === '') {
+            $this->pos++;
+
+            return $this->parseGroup();
+        }
 
         // Check if this looks like a module name (stop parsing groups)
-        if (!str_contains($line, ' => ') && strlen($line) < 80 && ($this->pos + 1 >= $this->len || $this->lines[$this->pos + 1] === '')) {
+        if (! str_contains($line, ' => ') && strlen($line) < 80 && ($this->pos + 1 >= $this->len || $this->lines[$this->pos + 1] === '')) {
             return null;
         }
 
@@ -146,16 +168,20 @@ class TextParser implements Parser
         $note = null;
 
         // Group title: no " => ", next line is NOT blank, short text, not a heading keyword
-        if (!str_contains($line, ' => ') && strlen($line) < 80
+        if (! str_contains($line, ' => ') && strlen($line) < 80
             && ($this->pos + 1 < $this->len && $this->lines[$this->pos + 1] !== '')
-            && !in_array($line, ['Directive', 'Variable', 'Contribution', 'Module'])) {
+            && ! in_array($line, ['Directive', 'Variable', 'Contribution', 'Module'])) {
 
             // But also check it's not a module name
-            if (!str_contains($line, '                     ') && ($this->pos + 1 < $this->len && str_contains($this->lines[$this->pos + 1], ' => ') || in_array($this->lines[$this->pos + 1] ?? '', ['Directive', 'Variable']))) {
+            if (! str_contains($line, '                     ') && ($this->pos + 1 < $this->len && str_contains($this->lines[$this->pos + 1], ' => ') || in_array($this->lines[$this->pos + 1] ?? '', ['Directive', 'Variable']))) {
                 $groupName = $line;
-                do { $this->pos++; } while ($this->pos < $this->len && $this->lines[$this->pos] === '');
+                do {
+                    $this->pos++;
+                } while ($this->pos < $this->len && $this->lines[$this->pos] === '');
                 $line = $this->lines[$this->pos] ?? null;
-                if ($line === null) return null;
+                if ($line === null) {
+                    return null;
+                }
             }
         }
 
@@ -163,7 +189,9 @@ class TextParser implements Parser
         $parts = explode(' => ', $line);
         if (in_array($parts[0], ['Directive', 'Variable', 'Contribution', 'Module'])) {
             $headings = $parts;
-            do { $this->pos++; } while ($this->pos < $this->len && $this->lines[$this->pos] === '');
+            do {
+                $this->pos++;
+            } while ($this->pos < $this->len && $this->lines[$this->pos] === '');
             $line = $this->lines[$this->pos] ?? null;
         }
 
@@ -173,13 +201,15 @@ class TextParser implements Parser
         // Parse config rows
         while ($this->pos < $this->len) {
             $line = $this->lines[$this->pos];
-            if ($line === '' || str_contains($line, '_______________________________________________________________________')) break;
+            if ($line === '' || str_contains($line, '_______________________________________________________________________')) {
+                break;
+            }
 
-            if (!str_contains($line, ' => ')) {
+            if (! str_contains($line, ' => ')) {
                 // Could be a note or end of group
                 if (strlen($line) > 50) {
                     $noteLines = [];
-                    while ($this->pos < $this->len && $this->lines[$this->pos] !== '' && !str_contains($this->lines[$this->pos], '_____')) {
+                    while ($this->pos < $this->len && $this->lines[$this->pos] !== '' && ! str_contains($this->lines[$this->pos], '_____')) {
                         $noteLines[] = $this->lines[$this->pos];
                         $this->pos++;
                     }
@@ -206,18 +236,18 @@ class TextParser implements Parser
             // Multi-line values (comma-continued)
             while ($localValue !== null && str_ends_with($localValue, ',') && $this->pos + 1 < $this->len) {
                 $this->pos++;
-                $localValue .= "\n" . $this->lines[$this->pos];
+                $localValue .= "\n".$this->lines[$this->pos];
             }
 
             // Multi-line Array dumps (e.g. $_SERVER['argv'] => Array\n(\n...\n))
             if ($localValue !== null && $localValue === 'Array') {
                 $this->pos++;
                 while ($this->pos < $this->len && trim($this->lines[$this->pos]) !== ')') {
-                    $localValue .= "\n" . $this->lines[$this->pos];
+                    $localValue .= "\n".$this->lines[$this->pos];
                     $this->pos++;
                 }
                 if ($this->pos < $this->len) {
-                    $localValue .= "\n" . $this->lines[$this->pos];
+                    $localValue .= "\n".$this->lines[$this->pos];
                 }
             }
 
@@ -231,11 +261,13 @@ class TextParser implements Parser
             $this->pos++;
         }
 
-        if (empty($configs) && $note === null && $groupName === null) return null;
+        if (empty($configs) && $note === null && $groupName === null) {
+            return null;
+        }
 
         return new Group(
             items($configs),
-            !empty($headings) ? items($headings) : null,
+            ! empty($headings) ? items($headings) : null,
             $groupName,
             $note,
         );
@@ -243,23 +275,33 @@ class TextParser implements Parser
 
     private function parseCredits(Items $modules): void
     {
-        if ($this->pos >= $this->len || $this->lines[$this->pos] !== 'PHP Credits') return;
+        if ($this->pos >= $this->len || $this->lines[$this->pos] !== 'PHP Credits') {
+            return;
+        }
 
         $this->pos++; // skip "PHP Credits"
-        while ($this->pos < $this->len && $this->lines[$this->pos] === '') $this->pos++;
+        while ($this->pos < $this->len && $this->lines[$this->pos] === '') {
+            $this->pos++;
+        }
 
         $groups = [];
 
         while ($this->pos < $this->len) {
             $line = $this->lines[$this->pos];
-            if ($line === '' && ($this->pos + 1 >= $this->len || $this->lines[$this->pos + 1] === 'PHP License' || str_contains($this->lines[$this->pos + 1] ?? '', '____'))) break;
-            if ($line === 'PHP License' || str_contains($line, '_______________________________________________________________________')) break;
+            if ($line === '' && ($this->pos + 1 >= $this->len || $this->lines[$this->pos + 1] === 'PHP License' || str_contains($this->lines[$this->pos + 1] ?? '', '____'))) {
+                break;
+            }
+            if ($line === 'PHP License' || str_contains($line, '_______________________________________________________________________')) {
+                break;
+            }
 
             // Centered title (padded with spaces)
             if (str_contains($line, '                     ')) {
                 $groupName = trim($line);
                 $this->pos++;
-                while ($this->pos < $this->len && $this->lines[$this->pos] === '') $this->pos++;
+                while ($this->pos < $this->len && $this->lines[$this->pos] === '') {
+                    $this->pos++;
+                }
 
                 // Table heading?
                 $headings = [];
@@ -267,12 +309,14 @@ class TextParser implements Parser
                 if (in_array($firstWord, ['Contribution', 'Module', 'Authors'])) {
                     $headings = explode(' => ', $this->lines[$this->pos]);
                     $this->pos++;
-                    while ($this->pos < $this->len && $this->lines[$this->pos] === '') $this->pos++;
+                    while ($this->pos < $this->len && $this->lines[$this->pos] === '') {
+                        $this->pos++;
+                    }
                 }
 
                 // Config rows
                 $configs = [];
-                while ($this->pos < $this->len && $this->lines[$this->pos] !== '' && !str_contains($this->lines[$this->pos], '______')) {
+                while ($this->pos < $this->len && $this->lines[$this->pos] !== '' && ! str_contains($this->lines[$this->pos], '______')) {
                     if (str_contains($this->lines[$this->pos], ' => ')) {
                         $parts = explode(' => ', $this->lines[$this->pos]);
                         $configs[] = new Config($parts[0], $parts[1] ?? null);
@@ -281,24 +325,32 @@ class TextParser implements Parser
                     }
                     $this->pos++;
                 }
-                while ($this->pos < $this->len && $this->lines[$this->pos] === '') $this->pos++;
+                while ($this->pos < $this->len && $this->lines[$this->pos] === '') {
+                    $this->pos++;
+                }
 
-                if (!empty($configs)) {
+                if (! empty($configs)) {
                     $groups[] = new Group(
                         items($configs),
-                        !empty($headings) ? items($headings) : null,
+                        ! empty($headings) ? items($headings) : null,
                         $groupName,
                     );
                 }
             }
             // Simple title + value pair (e.g. "PHP Group" followed by names)
-            elseif (!str_contains($line, ' => ') && strlen($line) < 80) {
+            elseif (! str_contains($line, ' => ') && strlen($line) < 80) {
                 $groupName = $line;
                 $this->pos++;
-                while ($this->pos < $this->len && $this->lines[$this->pos] === '') $this->pos++;
-                $value = ($this->pos < $this->len && $this->lines[$this->pos] !== '' && !str_contains($this->lines[$this->pos], '______')) ? $this->lines[$this->pos] : null;
-                if ($value !== null) $this->pos++;
-                while ($this->pos < $this->len && $this->lines[$this->pos] === '') $this->pos++;
+                while ($this->pos < $this->len && $this->lines[$this->pos] === '') {
+                    $this->pos++;
+                }
+                $value = ($this->pos < $this->len && $this->lines[$this->pos] !== '' && ! str_contains($this->lines[$this->pos], '______')) ? $this->lines[$this->pos] : null;
+                if ($value !== null) {
+                    $this->pos++;
+                }
+                while ($this->pos < $this->len && $this->lines[$this->pos] === '') {
+                    $this->pos++;
+                }
 
                 $groups[] = new Group(
                     $value ? items([new Config('Names', $value)]) : items(),
@@ -309,17 +361,21 @@ class TextParser implements Parser
             }
         }
 
-        if (!empty($groups)) {
+        if (! empty($groups)) {
             $modules->push(new Module('PHP Credits', items($groups)));
         }
     }
 
     private function parseLicense(Items $modules): void
     {
-        if ($this->pos >= $this->len || $this->lines[$this->pos] !== 'PHP License') return;
+        if ($this->pos >= $this->len || $this->lines[$this->pos] !== 'PHP License') {
+            return;
+        }
 
         $this->pos++; // skip "PHP License"
-        while ($this->pos < $this->len && $this->lines[$this->pos] === '') $this->pos++;
+        while ($this->pos < $this->len && $this->lines[$this->pos] === '') {
+            $this->pos++;
+        }
 
         $text = [];
         while ($this->pos < $this->len) {
