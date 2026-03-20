@@ -42,11 +42,12 @@ src/
   Parsers/
     Parser.php          # Interface: canParse(), parse()
     HtmlParser.php      # Parses phpinfo() HTML output (DOMDocument/DOMXPath)
-    TextParser.php      # Parses phpinfo() CLI text output
-    TextCursor.php      # Stateful line-by-line cursor for text parsing
+    TextParser.php      # Thin wrapper: delegates to parse_text.php, wraps arrays in models
+    parse_text.php      # Shared plain-PHP text parser (used by package and standalone script)
   Support/
+    Items.php           # Lightweight iterable collection (zero dependencies)
     Str.php             # Static slug() utility
-helpers.php             # Global prettyphpinfo() function, autoloaded via composer files
+helpers.php             # Global prettyphpinfo() and items() functions, autoloaded via composer files
 dist/
   default.php           # Pretty UI template (includes styles.css and app.js via PHP include)
   styles.css            # Tailwind v4 compiled CSS (built via npm run build)
@@ -64,7 +65,7 @@ build-go.php            # Build script: reads go.php + styles.css + app.js → g
 
 3. **`Config::$hasMasterValue` is a proper bool.** The old code used `false` as a sentinel value for "no master value exists" vs `null` for "master value is empty." Now it's a clean `bool $hasMasterValue` parameter.
 
-4. **`TextCursor` is standalone.** Replaces the old `Lines` class that extended Laravel's `Collection` with mutable cursor state bolted on.
+4. **Zero runtime dependencies.** `illuminate/collections` was replaced with a lightweight `Items` class. The text parser is plain PHP shared between the package and standalone script.
 
 5. **Lookups compare slugified names, not prefixed keys.** `module()`, `config()`, `hasModule()`, `hasConfig()` all slugify the input and compare against slugified model names. The `key()` methods (with `module_`, `config_`, `group_` prefixes) are only for frontend DOM IDs and JSON serialization.
 
@@ -132,7 +133,7 @@ Single `index.html` — dark-first design with light/dark toggle:
 
 ### Package
 - Full architecture redesign (Parser separated from Result, PhpInfo value object, TextCursor, etc.)
-- PHP 8.3+ minimum, Laravel Collections 11+, Tailwind CSS v4, PHPUnit 12
+- PHP 8.3+ minimum, zero runtime dependencies, Tailwind CSS v4, PHPUnit 12
 - Fixed 8+ bugs (broken lookups, SVG parsing, JS errors, PHP 8.3 deprecations, clipboard on HTTP)
 - Modern UI overhaul (thin borders, frosted glass header, dark mode toggle, click-to-copy, search matching module names, long value truncation)
 - `prettyphpinfo()` global helper with `INFO_*` constant support

@@ -1,8 +1,14 @@
 {
   "name": "stechstudio/phpinfo",
-  "description": "Easily interact with phpinfo() configuration",
+  "description": "A beautiful, searchable replacement for phpinfo() with a clean programmatic API",
   "type": "library",
   "license": "MIT",
+  "keywords": ["phpinfo", "php-info", "server-info", "configuration", "pretty-phpinfo"],
+  "homepage": "https://prettyphpinfo.com",
+  "support": {
+    "issues": "https://github.com/stechstudio/phpinfo/issues",
+    "source": "https://github.com/stechstudio/phpinfo"
+  },
   "autoload": {
     "files": ["helpers.php"],
     "psr-4": {

@@ -131,6 +131,20 @@ class Items implements Countable, IteratorAggregate, JsonSerializable
         return $this->items;
     }
 
+    public function toArray(): array
+    {
+        return $this->items;
+    }
+
+    public function contains(mixed $callback): bool
+    {
+        if (is_callable($callback)) {
+            return $this->first($callback) !== null;
+        }
+
+        return in_array($callback, $this->items, true);
+    }
+
     public function isEmpty(): bool
     {
         return empty($this->items);

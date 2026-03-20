@@ -89,7 +89,7 @@ class PhpInfo implements JsonSerializable
         ];
     }
 
-    protected function findConfig(string $name): ?Config
+    public function findConfig(string $name): ?Config
     {
         $slug = Str::slug($name);
 

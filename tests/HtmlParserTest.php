@@ -179,11 +179,9 @@ class HtmlParserTest extends TestCase
     {
         $credits = self::info()->module('PHP Credits');
 
-        if ($credits !== null) {
-            $this->assertNotEmpty($credits->name());
-        }
-
-        $this->assertTrue(true);
+        $this->assertNotNull($credits);
+        $this->assertNotEmpty($credits->name());
+        $this->assertGreaterThan(0, $credits->groups()->count());
     }
 
     #[Test]
@@ -191,12 +189,9 @@ class HtmlParserTest extends TestCase
     {
         $license = self::info()->module('PHP License');
 
-        if ($license !== null) {
-            $this->assertNotEmpty($license->name());
-            $this->assertGreaterThan(0, $license->groups()->count());
-        }
-
-        $this->assertTrue(true);
+        $this->assertNotNull($license);
+        $this->assertNotEmpty($license->name());
+        $this->assertGreaterThan(0, $license->groups()->count());
     }
 
     #[Test]

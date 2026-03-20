@@ -102,7 +102,7 @@ $info->hostname(); // "my-server"
 
 ## Iterating over data structure
 
-You can access a data structure of [collections](https://laravel.com/docs/master/collections) to easily loop over your `phpinfo()` configuration. 
+You can iterate over the full data structure to loop over your `phpinfo()` configuration. All lists (`modules()`, `groups()`, `configs()`) return iterable `Items` objects with `filter()`, `map()`, `first()`, `each()`, `count()`, and more.
 
 ```php
 // Loop over defined modules

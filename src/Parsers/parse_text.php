@@ -7,7 +7,11 @@
  *   - The standalone script dist/go-standalone.php (inlined by build-go.php)
  *
  * No classes, no namespaces, no dependencies — just functions returning arrays.
+ *
+ * All functions use a single guard since this file may be required multiple times.
  */
+
+if (!function_exists('pp_slug')) {
 
 function pp_slug(string $text): string {
     return strtolower(trim(preg_replace('/\W+/', '_', $text), '_'));
@@ -350,3 +354,5 @@ function pp_parseLicense(array &$modules, array &$lines, int &$i, int $len): voi
         ];
     }
 }
+
+} // end function_exists guard

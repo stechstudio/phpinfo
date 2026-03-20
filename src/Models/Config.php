@@ -40,7 +40,11 @@ class Config implements JsonSerializable
 
     public function value(string $which = 'local'): ?string
     {
-        return $which === 'master' ? $this->masterValue() : $this->localValue();
+        return match ($which) {
+            'local' => $this->localValue(),
+            'master' => $this->masterValue(),
+            default => throw new \InvalidArgumentException("Invalid value type '{$which}'. Expected 'local' or 'master'."),
+        };
     }
 
     public function localValue(): ?string

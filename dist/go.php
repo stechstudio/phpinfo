@@ -11,7 +11,7 @@
  * @see https://github.com/stechstudio/phpinfo
  */
 
-// ── Capture phpinfo (safe subset only) ────────────────────────────────
+// ── Capture phpinfo ───────────────────────────────────────────────────
 
 ob_start();
 phpinfo();
@@ -330,7 +330,7 @@ file_put_contents($file, $html);
 $opened = match (PHP_OS_FAMILY) {
     'Darwin' => !exec('open ' . escapeshellarg($file)),
     'Linux' => !exec('xdg-open ' . escapeshellarg($file) . ' 2>/dev/null &'),
-    'Windows' => !exec('start "" "' . addcslashes($file, '"') . '"'),
+    'Windows' => !exec('start "" ' . escapeshellarg($file)),
     default => false,
 };
 
