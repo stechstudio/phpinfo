@@ -35,7 +35,7 @@ ob_start();
     <meta name="description" content="View your phpinfo() output in a pretty, responsive, searchable interface">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        <?php include(__DIR__ . "/styles.css"); ?>
+        <?php include(__DIR__ . "/../dist/styles.css"); ?>
     </style>
 </head>
 
@@ -312,7 +312,7 @@ ob_start();
     });
 </script>
 <script type="module">
-    <?php include(__DIR__ . "/app.js"); ?>
+    <?php include(__DIR__ . "/../dist/app.js"); ?>
 </script>
 </body>
 </html>

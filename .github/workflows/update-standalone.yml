@@ -6,10 +6,9 @@ on:
     branches: [main]
     paths:
       - 'src/Parsers/parse_text.php'
-      - 'dist/go.php'
+      - 'build/**'
       - 'dist/styles.css'
       - 'dist/app.js'
-      - 'build-go.php'
 
 jobs:
   update:
@@ -24,7 +23,7 @@ jobs:
           php-version: '8.3'
 
       - name: Build standalone script
-        run: php build-go.php
+        run: php build/build.php
 
       - name: Push to landing page repo
         run: |
