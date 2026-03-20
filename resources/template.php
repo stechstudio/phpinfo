@@ -65,7 +65,7 @@
                         <a x-show="module.shouldShow"
                            :id="'nav_' + module.key"
                            :href="'#' + module.key" @click=jump(module.key)
-                           class="px-3 py-1 rounded-md block text-[13px]" :class="selected == module.key ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'">
+                           class="px-3 py-1 rounded-md block text-sm" :class="selected == module.key ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'">
                             <span x-text="module.name"></span>
                         </a>
                     </template>
@@ -129,7 +129,7 @@
                                                             </a>
                                                         </td>
                                                         <td class="py-1 lg:py-2.5 px-6 lg:px-4 group/cell relative text-slate-600 dark:text-slate-300" style="overflow-wrap: anywhere"
-                                                            :class="isNoValue(config.localValue) && 'text-slate-300 dark:text-slate-600 italic'">
+                                                            :class="isNoValue(config.localValue) && 'text-slate-300/60 dark:text-slate-600/60 italic'">
                                                             <span x-show="group.headings.length > 0" class="empty:hidden inline-block w-14 text-center lg:hidden py-0.5 mr-1 text-xs font-medium rounded border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400" x-text="group.shortHeadings[1]"></span>
                                                             <span x-html="isLongValue(config.localValue) && !config.expanded ? truncateValue(formatted(config.localValue)) : formatted(config.localValue)"></span>
                                                             <button x-show="isLongValue(config.localValue)" @click="config.expanded = !config.expanded" class="ml-1 text-xs text-blue-600 dark:text-blue-400 hover:underline" x-text="config.expanded ? 'show less' : 'show more'"></button>
@@ -140,7 +140,7 @@
                                                             </button>
                                                         </td>
                                                         <td x-show="config.hasMasterValue" class="py-1 lg:py-2.5 px-6 lg:px-4 group/cell relative text-slate-600 dark:text-slate-300" style="overflow-wrap: anywhere"
-                                                            :class="isNoValue(config.masterValue) && 'text-slate-300 dark:text-slate-600 italic'">
+                                                            :class="isNoValue(config.masterValue) && 'text-slate-300/60 dark:text-slate-600/60 italic'">
                                                             <span x-show="group.headings.length > 0" class="empty:hidden inline-block w-14 text-center lg:hidden py-0.5 mr-1 text-xs font-medium rounded border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400" x-text="group.shortHeadings[2]"></span>
                                                             <span x-html="formatted(config.masterValue)"></span>
                                                             <button x-show="!isNoValue(config.masterValue)" @click="copyValue(config.masterValue)" class="copy-btn hidden lg:group-hover/cell:inline-flex absolute top-2 right-2 items-center justify-center p-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 text-xs" title="Copy value">
