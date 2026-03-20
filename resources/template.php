@@ -1,10 +1,3 @@
-<?php
-// If you are copying this file out to be used elsewhere, uncomment the following lines,
-// and ensure the path to your composer autoload file is correct.
-//
-// require __DIR__ . '/../vendor/autoload.php';
-// $info = STS\Phpinfo\Info::capture();
-?>
 <!doctype html>
 <html :class="darkMode && 'dark'" x-data="{ darkMode: localStorage.getItem('phpinfo-dark') === 'true' || (!localStorage.getItem('phpinfo-dark') && window.matchMedia('(prefers-color-scheme: dark)').matches) }" class="dark:[color-scheme:dark]">
 
@@ -17,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
-        <?php include(__DIR__ . "/styles.css"); ?>
+        <?php include(__DIR__ . "/../dist/styles.css"); ?>
     </style>
 </head>
 
@@ -385,7 +378,7 @@
     });
 </script>
 <script type="module">
-    <?php include(__DIR__ . "/app.js"); ?>
+    <?php include(__DIR__ . "/../dist/app.js"); ?>
 </script>
 </body>
 </html>

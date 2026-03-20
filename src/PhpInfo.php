@@ -78,7 +78,7 @@ class PhpInfo implements JsonSerializable
     public function render(): void
     {
         $info = $this;
-        include __DIR__ . '/../dist/default.php';
+        include __DIR__ . '/../resources/template.php';
     }
 
     public function jsonSerialize(): mixed

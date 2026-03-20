@@ -9,6 +9,7 @@
 $root = dirname(__DIR__);
 
 $source = file_get_contents(__DIR__ . '/go.php');
+$template = file_get_contents($root . '/resources/template.php');
 $css = file_get_contents($root . '/dist/styles.css');
 $js = file_get_contents($root . '/dist/app.js');
 
@@ -45,6 +46,13 @@ $source = preg_replace('/^<\?php\s*/s', '', $source);
 $source = str_replace(
     "require_once __DIR__ . '/../vendor/autoload.php';\n",
     '',
+    $source
+);
+
+// Inline the template (exit PHP, paste template content, re-enter PHP)
+$source = str_replace(
+    "include __DIR__ . '/../resources/template.php';",
+    "?>\n" . $template . "\n<?php",
     $source
 );
 
