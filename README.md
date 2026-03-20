@@ -22,16 +22,14 @@ composer require stechstudio/phpinfo
 The simplest way to use this package is the global `prettyphpinfo()` function — a drop-in replacement for `phpinfo()`:
 
 ```php
-<?php
-require __DIR__ . '/../vendor/autoload.php';
-
 prettyphpinfo();
 ```
 
 That's it. You'll get a pretty, searchable, dark-mode-ready page instead of the default `phpinfo()` output.
 
-<img width="1506" height="990" alt="phpinfo-screenshot" src="https://github.com/user-attachments/assets/7737f2f9-da88-4465-8b25-130af7e3908d" />
+> If you're not using a framework with Composer autoloading, you'll need to add `require __DIR__ . '/vendor/autoload.php';` first.
 
+<img width="1506" height="990" alt="phpinfo-screenshot" src="https://github.com/user-attachments/assets/7737f2f9-da88-4465-8b25-130af7e3908d" />
 
 
 Just like the native `phpinfo()`, you can pass `INFO_*` constants to control which sections are displayed:
