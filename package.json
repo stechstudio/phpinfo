@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "watch": "npx @tailwindcss/cli -i ./src/resources/input.css -o ./dist/styles.css --watch --minify",
-    "build": "npx @tailwindcss/cli -i ./src/resources/input.css -o ./dist/styles.css --minify"
+    "watch": "npx @tailwindcss/cli -i ./resources/input.css -o ./dist/styles.css --watch --minify",
+    "build": "npx @tailwindcss/cli -i ./resources/input.css -o ./dist/styles.css --minify"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.2",
