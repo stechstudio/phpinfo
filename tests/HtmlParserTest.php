@@ -1,224 +1,156 @@
 <?php
 
-namespace STS\Phpinfo\Tests;
-
-use InvalidArgumentException;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 use STS\Phpinfo\Info;
 use STS\Phpinfo\Parsers\HtmlParser;
 use STS\Phpinfo\PhpInfo;
 
-class HtmlParserTest extends TestCase
+function htmlInfo(): PhpInfo
 {
-    private static ?PhpInfo $info = null;
+    static $info = null;
 
-    private static function info(): PhpInfo
-    {
-        if (self::$info === null) {
-            self::$info = Info::fromHtml(
-                file_get_contents(__DIR__.'/fixtures/html-php83.html')
-            );
-        }
+    return $info ??= Info::fromHtml(
+        file_get_contents(__DIR__.'/fixtures/html-php83.html')
+    );
+}
 
-        return self::$info;
+it('can detect html content', function () {
+    $html = file_get_contents(__DIR__.'/fixtures/html-php83.html');
+
+    expect(HtmlParser::canParse($html))->toBeTrue()
+        ->and(HtmlParser::canParse('not phpinfo'))->toBeFalse()
+        ->and(HtmlParser::canParse(''))->toBeFalse();
+});
+
+it('rejects invalid content', function () {
+    Info::fromHtml('not phpinfo content');
+})->throws(InvalidArgumentException::class);
+
+it('returns phpinfo instance', function () {
+    expect(htmlInfo())->toBeInstanceOf(PhpInfo::class);
+});
+
+it('parses php version', function () {
+    expect(htmlInfo()->version())
+        ->not->toBeEmpty()
+        ->toMatch('/^\d+\.\d+\.\d+/');
+});
+
+it('parses modules', function () {
+    $modules = htmlInfo()->modules();
+
+    expect($modules->count())->toBeGreaterThan(5)
+        ->and($modules->first()->name())->toBe('General');
+});
+
+it('has general module with configs', function () {
+    $general = htmlInfo()->module('General');
+
+    expect($general)->not->toBeNull()
+        ->and($general->configs()->count())->toBeGreaterThan(0);
+});
+
+it('has case insensitive module lookup', function () {
+    $name = htmlInfo()->modules()->skip(1)->first()->name();
+
+    expect(htmlInfo()->hasModule($name))->toBeTrue()
+        ->and(htmlInfo()->hasModule(strtolower($name)))->toBeTrue()
+        ->and(htmlInfo()->hasModule(strtoupper($name)))->toBeTrue();
+});
+
+it('returns null for missing module', function () {
+    expect(htmlInfo()->module('nonexistent_module_xyz'))->toBeNull()
+        ->and(htmlInfo()->hasModule('nonexistent_module_xyz'))->toBeFalse();
+});
+
+it('parses configs', function () {
+    expect(htmlInfo()->configs()->count())->toBeGreaterThan(50);
+});
+
+it('can query individual configs', function () {
+    expect(htmlInfo()->hasConfig('System'))->toBeTrue()
+        ->and(htmlInfo()->config('System'))->not->toBeNull();
+});
+
+it('returns null for missing config', function () {
+    expect(htmlInfo()->config('nonexistent_config_xyz'))->toBeNull()
+        ->and(htmlInfo()->hasConfig('nonexistent_config_xyz'))->toBeFalse();
+});
+
+it('has working convenience methods', function () {
+    $os = htmlInfo()->os();
+    $hostname = htmlInfo()->hostname();
+
+    expect($os)->not->toBeNull()
+        ->and($hostname)->not->toBeNull()
+        ->and(htmlInfo()->config('System'))->toStartWith($os);
+});
+
+it('handles local and master values', function () {
+    $config = htmlInfo()->configs()->first(fn ($c) => $c->hasMasterValue());
+
+    if ($config) {
+        expect(htmlInfo()->config($config->name(), 'local'))->not->toBeNull();
     }
 
-    #[Test]
-    public function it_can_detect_html_content(): void
-    {
-        $html = file_get_contents(__DIR__.'/fixtures/html-php83.html');
+    expect(true)->toBeTrue();
+});
 
-        $this->assertTrue(HtmlParser::canParse($html));
-        $this->assertFalse(HtmlParser::canParse('not phpinfo'));
-        $this->assertFalse(HtmlParser::canParse(''));
-    }
+it('parses groups with headings', function () {
+    $groupWithHeadings = null;
 
-    #[Test]
-    public function it_rejects_invalid_content(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        Info::fromHtml('not phpinfo content');
-    }
-
-    #[Test]
-    public function it_returns_phpinfo_instance(): void
-    {
-        $this->assertInstanceOf(PhpInfo::class, self::info());
-    }
-
-    #[Test]
-    public function it_parses_php_version(): void
-    {
-        $this->assertNotEmpty(self::info()->version());
-        $this->assertMatchesRegularExpression('/^\d+\.\d+\.\d+/', self::info()->version());
-    }
-
-    #[Test]
-    public function it_parses_modules(): void
-    {
-        $modules = self::info()->modules();
-
-        $this->assertGreaterThan(5, $modules->count());
-        $this->assertEquals('General', $modules->first()->name());
-    }
-
-    #[Test]
-    public function it_has_general_module_with_configs(): void
-    {
-        $general = self::info()->module('General');
-
-        $this->assertNotNull($general);
-        $this->assertGreaterThan(0, $general->configs()->count());
-    }
-
-    #[Test]
-    public function has_module_is_case_insensitive(): void
-    {
-        $firstModuleName = self::info()->modules()->skip(1)->first()->name();
-
-        $this->assertTrue(self::info()->hasModule($firstModuleName));
-        $this->assertTrue(self::info()->hasModule(strtolower($firstModuleName)));
-        $this->assertTrue(self::info()->hasModule(strtoupper($firstModuleName)));
-    }
-
-    #[Test]
-    public function it_returns_null_for_missing_module(): void
-    {
-        $this->assertNull(self::info()->module('nonexistent_module_xyz'));
-        $this->assertFalse(self::info()->hasModule('nonexistent_module_xyz'));
-    }
-
-    #[Test]
-    public function it_parses_configs(): void
-    {
-        $this->assertGreaterThan(50, self::info()->configs()->count());
-    }
-
-    #[Test]
-    public function it_can_query_individual_configs(): void
-    {
-        $this->assertTrue(self::info()->hasConfig('System'));
-        $this->assertNotNull(self::info()->config('System'));
-    }
-
-    #[Test]
-    public function it_returns_null_for_missing_config(): void
-    {
-        $this->assertNull(self::info()->config('nonexistent_config_xyz'));
-        $this->assertFalse(self::info()->hasConfig('nonexistent_config_xyz'));
-    }
-
-    #[Test]
-    public function convenience_methods_work(): void
-    {
-        $os = self::info()->os();
-        $hostname = self::info()->hostname();
-
-        $this->assertNotNull($os);
-        $this->assertNotNull($hostname);
-
-        $system = self::info()->config('System');
-        $this->assertStringStartsWith($os, $system);
-    }
-
-    #[Test]
-    public function it_handles_local_and_master_values(): void
-    {
-        $configWithMaster = self::info()->configs()
-            ->first(fn ($config) => $config->hasMasterValue());
-
-        if ($configWithMaster) {
-            $name = $configWithMaster->name();
-            $this->assertNotNull(self::info()->config($name, 'local'));
-        }
-
-        $this->assertTrue(true);
-    }
-
-    #[Test]
-    public function it_parses_groups_with_headings(): void
-    {
-        $groupWithHeadings = null;
-
-        foreach (self::info()->modules() as $module) {
-            foreach ($module->groups() as $group) {
-                if ($group->hasHeadings()) {
-                    $groupWithHeadings = $group;
-                    break 2;
-                }
+    foreach (htmlInfo()->modules() as $module) {
+        foreach ($module->groups() as $group) {
+            if ($group->hasHeadings()) {
+                $groupWithHeadings = $group;
+                break 2;
             }
         }
-
-        if ($groupWithHeadings) {
-            $this->assertGreaterThan(0, $groupWithHeadings->headings()->count());
-            $this->assertNotNull($groupWithHeadings->heading(0));
-        }
-
-        $this->assertTrue(true);
     }
 
-    #[Test]
-    public function it_handles_svg_elements_in_html(): void
-    {
-        $infoWithSvg = Info::fromHtml(file_get_contents(__DIR__.'/fixtures/html-php83-with-svg.html'));
-        $infoWithout = Info::fromHtml(file_get_contents(__DIR__.'/fixtures/html-php83.html'));
-
-        $this->assertEquals(
-            $infoWithout->modules()->count(),
-            $infoWithSvg->modules()->count()
-        );
-        $this->assertEquals(
-            $infoWithout->configs()->count(),
-            $infoWithSvg->configs()->count()
-        );
+    if ($groupWithHeadings) {
+        expect($groupWithHeadings->headings()->count())->toBeGreaterThan(0)
+            ->and($groupWithHeadings->heading(0))->not->toBeNull();
     }
 
-    #[Test]
-    public function it_parses_credits(): void
-    {
-        $credits = self::info()->module('PHP Credits');
+    expect(true)->toBeTrue();
+});
 
-        $this->assertNotNull($credits);
-        $this->assertNotEmpty($credits->name());
-        $this->assertGreaterThan(0, $credits->groups()->count());
-    }
+it('handles svg elements in html', function () {
+    $infoWithSvg = Info::fromHtml(file_get_contents(__DIR__.'/fixtures/html-php83-with-svg.html'));
+    $infoWithout = Info::fromHtml(file_get_contents(__DIR__.'/fixtures/html-php83.html'));
 
-    #[Test]
-    public function it_parses_license(): void
-    {
-        $license = self::info()->module('PHP License');
+    expect($infoWithSvg->modules()->count())->toBe($infoWithout->modules()->count())
+        ->and($infoWithSvg->configs()->count())->toBe($infoWithout->configs()->count());
+});
 
-        $this->assertNotNull($license);
-        $this->assertNotEmpty($license->name());
-        $this->assertGreaterThan(0, $license->groups()->count());
-    }
+it('parses credits', function () {
+    $credits = htmlInfo()->module('PHP Credits');
 
-    #[Test]
-    public function it_is_json_serializable(): void
-    {
-        $json = json_encode(self::info());
+    expect($credits)->not->toBeNull()
+        ->and($credits->name())->not->toBeEmpty()
+        ->and($credits->groups()->count())->toBeGreaterThan(0);
+});
 
-        $this->assertNotFalse($json);
+it('parses license', function () {
+    $license = htmlInfo()->module('PHP License');
 
-        $data = json_decode($json, true);
-        $this->assertArrayHasKey('version', $data);
-        $this->assertArrayHasKey('modules', $data);
-        $this->assertIsArray($data['modules']);
-        $this->assertGreaterThan(0, count($data['modules']));
+    expect($license)->not->toBeNull()
+        ->and($license->name())->not->toBeEmpty()
+        ->and($license->groups()->count())->toBeGreaterThan(0);
+});
 
-        $firstModule = $data['modules'][0];
-        $this->assertArrayHasKey('key', $firstModule);
-        $this->assertArrayHasKey('name', $firstModule);
-        $this->assertArrayHasKey('groups', $firstModule);
-    }
+it('is json serializable', function () {
+    $json = json_encode(htmlInfo());
+    $data = json_decode($json, true);
 
-    #[Test]
-    public function modules_have_unique_keys(): void
-    {
-        $keys = self::info()->modules()->map(fn ($m) => $m->key());
-        $uniqueKeys = $keys->unique();
+    expect($json)->not->toBeFalse()
+        ->and($data)->toHaveKeys(['version', 'modules'])
+        ->and($data['modules'])->toBeArray()->not->toBeEmpty()
+        ->and($data['modules'][0])->toHaveKeys(['key', 'name', 'groups']);
+});
 
-        $this->assertEquals($keys->count(), $uniqueKeys->count());
-    }
-}
+it('has unique module keys', function () {
+    $keys = htmlInfo()->modules()->map(fn ($m) => $m->key());
+
+    expect($keys->unique()->count())->toBe($keys->count());
+});

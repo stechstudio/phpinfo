@@ -1,309 +1,227 @@
 <?php
 
-namespace STS\Phpinfo\Tests;
-
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 use STS\Phpinfo\Models\Config;
 use STS\Phpinfo\Models\Group;
 use STS\Phpinfo\Models\Module;
 
-class ModelTest extends TestCase
-{
-    // ── Config ────────────────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────────
 
-    #[Test]
-    public function config_stores_name_and_values(): void
-    {
-        $config = new Config('max_file_uploads', '20', '100', hasMasterValue: true);
+it('stores name and values', function () {
+    $config = new Config('max_file_uploads', '20', '100', hasMasterValue: true);
 
-        $this->assertEquals('max_file_uploads', $config->name());
-        $this->assertEquals('20', $config->localValue());
-        $this->assertEquals('100', $config->masterValue());
-        $this->assertTrue($config->hasMasterValue());
-        $this->assertEquals('20', $config->value('local'));
-        $this->assertEquals('100', $config->value('master'));
-    }
+    expect($config->name())->toBe('max_file_uploads')
+        ->and($config->localValue())->toBe('20')
+        ->and($config->masterValue())->toBe('100')
+        ->and($config->hasMasterValue())->toBeTrue()
+        ->and($config->value('local'))->toBe('20')
+        ->and($config->value('master'))->toBe('100');
+});
 
-    #[Test]
-    public function config_handles_no_master_value(): void
-    {
-        $config = new Config('extension_dir', '/usr/lib/php');
+it('handles no master value', function () {
+    $config = new Config('extension_dir', '/usr/lib/php');
 
-        $this->assertEquals('/usr/lib/php', $config->localValue());
-        $this->assertFalse($config->hasMasterValue());
-        $this->assertNull($config->masterValue());
-    }
+    expect($config->localValue())->toBe('/usr/lib/php')
+        ->and($config->hasMasterValue())->toBeFalse()
+        ->and($config->masterValue())->toBeNull();
+});
 
-    #[Test]
-    public function config_handles_null_values(): void
-    {
-        $config = new Config('some_setting', null, null, hasMasterValue: true);
+it('handles null values', function () {
+    $config = new Config('some_setting', null, null, hasMasterValue: true);
 
-        $this->assertNull($config->localValue());
-        $this->assertTrue($config->hasMasterValue());
-        $this->assertNull($config->masterValue());
-    }
+    expect($config->localValue())->toBeNull()
+        ->and($config->hasMasterValue())->toBeTrue()
+        ->and($config->masterValue())->toBeNull();
+});
 
-    #[Test]
-    public function config_from_values_two_columns(): void
-    {
-        $config = Config::fromValues(['BCMath support', 'enabled']);
+it('creates from two column values', function () {
+    $config = Config::fromValues(['BCMath support', 'enabled']);
 
-        $this->assertEquals('BCMath support', $config->name());
-        $this->assertEquals('enabled', $config->localValue());
-        $this->assertFalse($config->hasMasterValue());
-    }
+    expect($config->name())->toBe('BCMath support')
+        ->and($config->localValue())->toBe('enabled')
+        ->and($config->hasMasterValue())->toBeFalse();
+});
 
-    #[Test]
-    public function config_from_values_three_columns(): void
-    {
-        $config = Config::fromValues(['max_file_uploads', '20', '100']);
+it('creates from three column values', function () {
+    $config = Config::fromValues(['max_file_uploads', '20', '100']);
 
-        $this->assertEquals('max_file_uploads', $config->name());
-        $this->assertEquals('20', $config->localValue());
-        $this->assertEquals('100', $config->masterValue());
-        $this->assertTrue($config->hasMasterValue());
-    }
+    expect($config->name())->toBe('max_file_uploads')
+        ->and($config->localValue())->toBe('20')
+        ->and($config->masterValue())->toBe('100')
+        ->and($config->hasMasterValue())->toBeTrue();
+});
 
-    #[Test]
-    public function config_from_values_handles_no_value(): void
-    {
-        $config = Config::fromValues(['some_setting', 'no value', 'no value']);
+it('handles no value in from values', function () {
+    $config = Config::fromValues(['some_setting', 'no value', 'no value']);
 
-        $this->assertNull($config->localValue());
-        $this->assertNull($config->masterValue());
-    }
+    expect($config->localValue())->toBeNull()
+        ->and($config->masterValue())->toBeNull();
+});
 
-    #[Test]
-    public function config_casts_to_string(): void
-    {
-        $config = new Config('test', 'hello');
-        $this->assertEquals('hello', (string) $config);
+it('casts to string', function () {
+    expect((string) new Config('test', 'hello'))->toBe('hello')
+        ->and((string) new Config('test', null))->toBe('');
+});
 
-        $nullConfig = new Config('test', null);
-        $this->assertEquals('', (string) $nullConfig);
-    }
+it('has slugified key', function () {
+    expect((new Config('Max File Uploads', '20'))->key())->toBe('config_max_file_uploads');
+});
 
-    #[Test]
-    public function config_key_is_slugified(): void
-    {
-        $config = new Config('Max File Uploads', '20');
+it('uses hash for names key', function () {
+    expect((new Config('Names', 'John Doe'))->key())->toStartWith('config_names_');
+});
 
-        $this->assertEquals('config_max_file_uploads', $config->key());
-    }
+it('is json serializable', function () {
+    $config = new Config('test_setting', 'local_val', 'master_val', hasMasterValue: true);
+    $data = json_decode(json_encode($config), true);
 
-    #[Test]
-    public function config_names_key_uses_hash(): void
-    {
-        $config = new Config('Names', 'John Doe');
+    expect($data['name'])->toBe('test_setting')
+        ->and($data['localValue'])->toBe('local_val')
+        ->and($data['masterValue'])->toBe('master_val')
+        ->and($data['hasMasterValue'])->toBeTrue()
+        ->and($data)->toHaveKey('key');
+});
 
-        $this->assertStringStartsWith('config_names_', $config->key());
-    }
+it('shows no value text in json', function () {
+    $data = json_decode(json_encode(new Config('empty', null)), true);
 
-    #[Test]
-    public function config_is_json_serializable(): void
-    {
-        $config = new Config('test_setting', 'local_val', 'master_val', hasMasterValue: true);
-        $data = json_decode(json_encode($config), true);
+    expect($data['localValue'])->toBe('no value');
+});
 
-        $this->assertEquals('test_setting', $data['name']);
-        $this->assertEquals('local_val', $data['localValue']);
-        $this->assertEquals('master_val', $data['masterValue']);
-        $this->assertTrue($data['hasMasterValue']);
-        $this->assertArrayHasKey('key', $data);
-    }
+// ── Group ─────────────────────────────────────────────────────────
 
-    #[Test]
-    public function config_json_shows_no_value_text(): void
-    {
-        $config = new Config('empty', null);
-        $data = json_decode(json_encode($config), true);
+it('stores configs and metadata', function () {
+    $group = new Group(
+        items([new Config('a', '1'), new Config('b', '2')]),
+        items(['Directive', 'Local Value', 'Master Value']),
+        'My Group',
+        'A note'
+    );
 
-        $this->assertEquals('no value', $data['localValue']);
-    }
+    expect($group->name())->toBe('My Group')
+        ->and($group->note())->toBe('A note')
+        ->and($group->configs()->count())->toBe(2)
+        ->and($group->hasHeadings())->toBeTrue()
+        ->and($group->heading(0))->toBe('Directive');
+});
 
-    // ── Group ─────────────────────────────────────────────────────────
+it('handles no headings', function () {
+    $group = new Group(items());
 
-    #[Test]
-    public function group_stores_configs_and_metadata(): void
-    {
-        $configs = items([
-            new Config('a', '1'),
-            new Config('b', '2'),
-        ]);
-        $headings = items(['Directive', 'Local Value', 'Master Value']);
+    expect($group->hasHeadings())->toBeFalse()
+        ->and($group->headings()->count())->toBe(0);
+});
 
-        $group = new Group($configs, $headings, 'My Group', 'A note');
+it('strips value from short headings', function () {
+    $group = new Group(items(), items(['Directive', 'Local Value', 'Master Value']));
 
-        $this->assertEquals('My Group', $group->name());
-        $this->assertEquals('A note', $group->note());
-        $this->assertEquals(2, $group->configs()->count());
-        $this->assertTrue($group->hasHeadings());
-        $this->assertEquals('Directive', $group->heading(0));
-    }
+    expect($group->shortHeading(0))->toBe('Directive')
+        ->and($group->shortHeading(1))->toBe('Local')
+        ->and($group->shortHeading(2))->toBe('Master');
+});
 
-    #[Test]
-    public function group_with_no_headings(): void
-    {
-        $group = new Group(items());
+it('creates via simple factory', function () {
+    $group = Group::simple('PHP Group', 'Names', 'Rasmus Lerdorf');
 
-        $this->assertFalse($group->hasHeadings());
-        $this->assertEquals(0, $group->headings()->count());
-    }
+    expect($group->name())->toBe('PHP Group')
+        ->and($group->configs()->count())->toBe(1)
+        ->and($group->configs()->first()->name())->toBe('Names')
+        ->and($group->configs()->first()->localValue())->toBe('Rasmus Lerdorf');
+});
 
-    #[Test]
-    public function group_short_heading_strips_value(): void
-    {
-        $group = new Group(
-            items(),
-            items(['Directive', 'Local Value', 'Master Value'])
-        );
+it('creates via note only factory', function () {
+    $group = Group::noteOnly('This is just a note');
 
-        $this->assertEquals('Local', $group->shortHeading(1));
-        $this->assertEquals('Master', $group->shortHeading(2));
-        $this->assertEquals('Directive', $group->shortHeading(0));
-    }
+    expect($group->note())->toBe('This is just a note')
+        ->and($group->configs()->count())->toBe(0);
+});
 
-    #[Test]
-    public function group_simple_factory(): void
-    {
-        $group = Group::simple('PHP Group', 'Names', 'Rasmus Lerdorf');
+it('adds note fluently', function () {
+    $group = new Group(items());
+    $result = $group->addNote('Added note');
 
-        $this->assertEquals('PHP Group', $group->name());
-        $this->assertEquals(1, $group->configs()->count());
-        $this->assertEquals('Names', $group->configs()->first()->name());
-        $this->assertEquals('Rasmus Lerdorf', $group->configs()->first()->localValue());
-    }
+    expect($result)->toBe($group)
+        ->and($group->note())->toBe('Added note');
+});
 
-    #[Test]
-    public function group_note_only_factory(): void
-    {
-        $group = Group::noteOnly('This is just a note');
+it('uses name in key when available', function () {
+    $group = new Group(items(), null, 'Session');
 
-        $this->assertEquals('This is just a note', $group->note());
-        $this->assertEquals(0, $group->configs()->count());
-    }
+    expect($group->key())->toStartWith('group_')
+        ->toContain('session');
+});
 
-    #[Test]
-    public function group_add_note(): void
-    {
-        $group = new Group(items());
-        $result = $group->addNote('Added note');
+it('uses hash in key when no name', function () {
+    $group = new Group(items([new Config('a', '1')]));
 
-        $this->assertSame($group, $result);
-        $this->assertEquals('Added note', $group->note());
-    }
+    expect($group->key())->toStartWith('group_');
+});
 
-    #[Test]
-    public function group_key_uses_name_when_available(): void
-    {
-        $group = new Group(items(), null, 'Session');
+it('is json serializable as group', function () {
+    $group = new Group(
+        items([new Config('test', 'value')]),
+        items(['Directive', 'Value']),
+        'Test Group',
+        'A note'
+    );
+    $data = json_decode(json_encode($group), true);
 
-        $this->assertStringStartsWith('group_', $group->key());
-        $this->assertStringContainsString('session', $group->key());
-    }
+    expect($data)->toHaveKey('key')
+        ->and($data['name'])->toBe('Test Group')
+        ->and($data['note'])->toBe('A note')
+        ->and($data['configs'])->toHaveCount(1)
+        ->and($data['headings'])->toHaveCount(2)
+        ->and($data['shortHeadings'])->toHaveCount(2);
+});
 
-    #[Test]
-    public function group_key_uses_hash_when_no_name(): void
-    {
-        $group = new Group(items([new Config('a', '1')]));
+// ── Module ────────────────────────────────────────────────────────
 
-        $this->assertStringStartsWith('group_', $group->key());
-    }
+it('stores name and groups', function () {
+    $module = new Module('curl', items([new Group(items([new Config('a', '1')]))]));
 
-    #[Test]
-    public function group_is_json_serializable(): void
-    {
-        $group = new Group(
-            items([new Config('test', 'value')]),
-            items(['Directive', 'Value']),
-            'Test Group',
-            'A note'
-        );
+    expect($module->name())->toBe('curl')
+        ->and($module->groups()->count())->toBe(1);
+});
 
-        $data = json_decode(json_encode($group), true);
+it('has prefixed slugified key', function () {
+    $module = new Module('Zend OPcache', items());
 
-        $this->assertArrayHasKey('key', $data);
-        $this->assertEquals('Test Group', $data['name']);
-        $this->assertEquals('A note', $data['note']);
-        $this->assertCount(1, $data['configs']);
-        $this->assertCount(2, $data['headings']);
-        $this->assertCount(2, $data['shortHeadings']);
-    }
+    expect($module->key())->toBe('module_zend_opcache');
+});
 
-    // ── Module ────────────────────────────────────────────────────────
+it('flattens configs from groups', function () {
+    $module = new Module('test', items([
+        new Group(items([new Config('a', '1'), new Config('b', '2')])),
+        new Group(items([new Config('c', '3')])),
+    ]));
 
-    #[Test]
-    public function module_stores_name_and_groups(): void
-    {
-        $group = new Group(items([new Config('a', '1')]));
-        $module = new Module('curl', items([$group]));
+    expect($module->configs()->count())->toBe(3);
+});
 
-        $this->assertEquals('curl', $module->name());
-        $this->assertEquals(1, $module->groups()->count());
-    }
+it('can query module configs', function () {
+    $module = new Module('test', items([
+        new Group(items([new Config('max_size', '100', '200', hasMasterValue: true)])),
+    ]));
 
-    #[Test]
-    public function module_key_is_prefixed_and_slugified(): void
-    {
-        $module = new Module('Zend OPcache', items());
+    expect($module->hasConfig('max_size'))->toBeTrue()
+        ->and($module->hasConfig('nonexistent'))->toBeFalse()
+        ->and($module->config('max_size'))->toBe('100')
+        ->and($module->config('max_size', 'master'))->toBe('200');
+});
 
-        $this->assertStringStartsWith('module_', $module->key());
-        $this->assertEquals('module_zend_opcache', $module->key());
-    }
+it('generates combined key for config', function () {
+    $config = new Config('max_size', '100');
+    $module = new Module('test', items());
 
-    #[Test]
-    public function module_flattens_configs_from_groups(): void
-    {
-        $group1 = new Group(items([
-            new Config('a', '1'),
-            new Config('b', '2'),
-        ]));
-        $group2 = new Group(items([
-            new Config('c', '3'),
-        ]));
-        $module = new Module('test', items([$group1, $group2]));
+    expect($module->combinedKeyFor($config))
+        ->toStartWith('module_test_')
+        ->toContain('config_max_size');
+});
 
-        $this->assertEquals(3, $module->configs()->count());
-    }
+it('is json serializable as module', function () {
+    $module = new Module('curl', items([new Group(items([new Config('a', '1')]))]));
+    $data = json_decode(json_encode($module), true);
 
-    #[Test]
-    public function module_can_query_configs(): void
-    {
-        $group = new Group(items([
-            new Config('max_size', '100', '200', hasMasterValue: true),
-        ]));
-        $module = new Module('test', items([$group]));
-
-        $this->assertTrue($module->hasConfig('max_size'));
-        $this->assertFalse($module->hasConfig('nonexistent'));
-        $this->assertEquals('100', $module->config('max_size'));
-        $this->assertEquals('200', $module->config('max_size', 'master'));
-    }
-
-    #[Test]
-    public function module_combined_key_for_config(): void
-    {
-        $config = new Config('max_size', '100');
-        $module = new Module('test', items());
-
-        $combined = $module->combinedKeyFor($config);
-
-        $this->assertStringStartsWith('module_test_', $combined);
-        $this->assertStringContainsString('config_max_size', $combined);
-    }
-
-    #[Test]
-    public function module_is_json_serializable(): void
-    {
-        $group = new Group(items([new Config('a', '1')]));
-        $module = new Module('curl', items([$group]));
-
-        $data = json_decode(json_encode($module), true);
-
-        $this->assertEquals('module_curl', $data['key']);
-        $this->assertEquals('curl', $data['name']);
-        $this->assertCount(1, $data['groups']);
-    }
-}
+    expect($data['key'])->toBe('module_curl')
+        ->and($data['name'])->toBe('curl')
+        ->and($data['groups'])->toHaveCount(1);
+});

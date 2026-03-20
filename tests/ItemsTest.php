@@ -1,411 +1,280 @@
 <?php
 
-namespace STS\Phpinfo\Tests;
-
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 use STS\Phpinfo\Info;
 use STS\Phpinfo\Models\Config;
 use STS\Phpinfo\Models\Module;
 use STS\Phpinfo\Support\Items;
 
-class ItemsTest extends TestCase
-{
-    #[Test]
-    public function it_creates_from_array(): void
-    {
-        $items = new Items([1, 2, 3]);
+it('creates from array', function () {
+    $items = new Items([1, 2, 3]);
 
-        $this->assertEquals(3, $items->count());
-        $this->assertEquals([1, 2, 3], $items->all());
+    expect($items->count())->toBe(3)
+        ->and($items->all())->toBe([1, 2, 3]);
+});
+
+it('creates from iterable', function () {
+    $items = new Items((function () {
+        yield 'a';
+        yield 'b';
+    })());
+
+    expect($items->count())->toBe(2)
+        ->and($items->all())->toBe(['a', 'b']);
+});
+
+it('creates empty', function () {
+    $items = new Items;
+
+    expect($items->isEmpty())->toBeTrue()
+        ->and($items->isNotEmpty())->toBeFalse()
+        ->and($items->count())->toBe(0);
+});
+
+it('pushes and prepends', function () {
+    $items = new Items([2]);
+    $items->push(3)->prepend(1);
+
+    expect($items->all())->toBe([1, 2, 3]);
+});
+
+it('gets first without callback', function () {
+    expect((new Items(['a', 'b']))->first())->toBe('a')
+        ->and((new Items)->first())->toBeNull();
+});
+
+it('gets first with callback', function () {
+    $items = new Items([1, 2, 3, 4]);
+
+    expect($items->first(fn ($v) => $v > 2))->toBe(3)
+        ->and($items->first(fn ($v) => $v > 10))->toBeNull();
+});
+
+it('gets last without callback', function () {
+    expect((new Items(['a', 'b', 'c']))->last())->toBe('c')
+        ->and((new Items)->last())->toBeNull();
+});
+
+it('gets last with callback', function () {
+    $items = new Items([1, 2, 3, 4]);
+
+    expect($items->last(fn ($v) => $v > 2))->toBe(4)
+        ->and($items->last(fn ($v) => $v > 10))->toBeNull();
+});
+
+it('gets by index', function () {
+    $items = new Items(['a', 'b', 'c']);
+
+    expect($items->get(1))->toBe('b')
+        ->and($items->get(99))->toBeNull();
+});
+
+it('maps without mutating', function () {
+    $items = new Items([1, 2, 3]);
+    $mapped = $items->map(fn ($v) => $v * 2);
+
+    expect($mapped->all())->toBe([2, 4, 6])
+        ->and($items->all())->toBe([1, 2, 3]);
+});
+
+it('flat maps', function () {
+    $items = new Items([[1, 2], [3, 4]]);
+
+    expect($items->flatMap(fn ($v) => $v)->all())->toBe([1, 2, 3, 4]);
+});
+
+it('flat maps with empty results', function () {
+    $items = new Items([1, 2, 3]);
+
+    expect($items->flatMap(fn () => [])->isEmpty())->toBeTrue();
+});
+
+it('filters with callback', function () {
+    $items = new Items([1, 2, 3, 4, 5]);
+
+    expect($items->filter(fn ($v) => $v > 3)->all())->toBe([4, 5]);
+});
+
+it('filters without callback removes falsy', function () {
+    $items = new Items([0, 1, '', 'a', null, false, true]);
+
+    expect($items->filter()->all())->toBe([1, 'a', true]);
+});
+
+it('rejects', function () {
+    $items = new Items([1, 2, 3, 4, 5]);
+
+    expect($items->reject(fn ($v) => $v > 3)->all())->toBe([1, 2, 3]);
+});
+
+it('iterates with each', function () {
+    $items = new Items([1, 2, 3]);
+    $collected = [];
+    $result = $items->each(function ($v, $k) use (&$collected) {
+        $collected[] = "{$k}:{$v}";
+    });
+
+    expect($collected)->toBe(['0:1', '1:2', '2:3'])
+        ->and($result)->toBe($items);
+});
+
+it('implodes', function () {
+    expect((new Items(['a', 'b', 'c']))->implode(', '))->toBe('a, b, c');
+});
+
+it('skips', function () {
+    $items = new Items([1, 2, 3, 4, 5]);
+
+    expect($items->skip(2)->all())->toBe([3, 4, 5])
+        ->and($items->skip(10)->all())->toBe([]);
+});
+
+it('returns unique values', function () {
+    expect((new Items([1, 2, 2, 3, 3, 3]))->unique()->all())->toBe([1, 2, 3]);
+});
+
+it('reindexes with values', function () {
+    expect((new Items([10 => 'a', 20 => 'b']))->values()->all())->toBe(['a', 'b']);
+});
+
+it('has toArray as alias of all', function () {
+    $items = new Items([1, 2, 3]);
+
+    expect($items->toArray())->toBe($items->all());
+});
+
+it('contains a value with strict comparison', function () {
+    $items = new Items([1, 2, 3]);
+
+    expect($items->contains(2))->toBeTrue()
+        ->and($items->contains(99))->toBeFalse()
+        ->and($items->contains('1'))->toBeFalse();
+});
+
+it('contains with callback', function () {
+    $items = new Items([1, 2, 3]);
+
+    expect($items->contains(fn ($v) => $v > 2))->toBeTrue()
+        ->and($items->contains(fn ($v) => $v > 10))->toBeFalse();
+});
+
+it('is iterable', function () {
+    $collected = [];
+    foreach (new Items([1, 2, 3]) as $item) {
+        $collected[] = $item;
     }
 
-    #[Test]
-    public function it_creates_from_iterable(): void
-    {
-        $generator = function () {
-            yield 'a';
-            yield 'b';
-        };
-        $items = new Items($generator());
+    expect($collected)->toBe([1, 2, 3]);
+});
 
-        $this->assertEquals(2, $items->count());
-        $this->assertEquals(['a', 'b'], $items->all());
+it('is countable', function () {
+    expect(new Items([1, 2, 3]))->toHaveCount(3);
+});
+
+it('is json serializable', function () {
+    expect(json_encode(new Items([1, 2, 3])))->toBe('[1,2,3]');
+});
+
+it('handles nested json serializable', function () {
+    expect(json_encode(new Items([new Items([1, 2])])))->toBe('[[1,2]]');
+});
+
+// ── Integration tests with model objects ─────────────────────────
+
+it('filters and maps modules', function () {
+    $names = Info::capture()->modules()
+        ->filter(fn (Module $m) => strlen($m->name()) < 5)
+        ->map(fn (Module $m) => $m->name());
+
+    expect($names)->toBeInstanceOf(Items::class)
+        ->and($names->count())->toBeGreaterThan(0);
+
+    foreach ($names as $name) {
+        expect(strlen($name))->toBeLessThan(5);
     }
+});
 
-    #[Test]
-    public function it_creates_empty(): void
-    {
-        $items = new Items;
+it('iterates modules with each', function () {
+    $info = Info::capture();
+    $names = [];
+    $info->modules()->each(function (Module $m) use (&$names) {
+        $names[] = $m->name();
+    });
 
-        $this->assertTrue($items->isEmpty());
-        $this->assertFalse($items->isNotEmpty());
-        $this->assertEquals(0, $items->count());
+    expect(count($names))->toBeGreaterThan(5)
+        ->toBe($info->modules()->count());
+});
+
+it('gets first and last modules', function () {
+    $info = Info::capture();
+
+    expect($info->modules()->first()->name())->toBe('General')
+        ->and($info->modules()->last())->not->toBeNull()
+        ->and($info->modules()->last()->name())->not->toBe('General');
+});
+
+it('checks module containment', function () {
+    $info = Info::capture();
+
+    expect($info->modules()->contains(fn (Module $m) => $m->name() === 'General'))->toBeTrue()
+        ->and($info->modules()->contains(fn (Module $m) => $m->name() === 'NonexistentModule'))->toBeFalse();
+});
+
+it('flat maps configs across modules', function () {
+    $allConfigs = Info::capture()->modules()->flatMap(fn (Module $m) => $m->configs());
+
+    expect($allConfigs)->toBeInstanceOf(Items::class)
+        ->and($allConfigs->count())->toBeGreaterThan(50)
+        ->and($allConfigs->first())->toBeInstanceOf(Config::class);
+});
+
+it('chains filter map first on configs', function () {
+    $result = Info::capture()->configs()
+        ->filter(fn (Config $c) => $c->hasMasterValue())
+        ->map(fn (Config $c) => $c->name())
+        ->first();
+
+    expect($result)->not->toBeNull()->toBeString();
+});
+
+it('skips and counts modules', function () {
+    $info = Info::capture();
+    $skipped = $info->modules()->skip(2);
+
+    expect($skipped->count())->toBe($info->modules()->count() - 2)
+        ->and($skipped->first()->name())->not->toBe('General');
+});
+
+it('maps and implodes module keys', function () {
+    $keys = Info::capture()->modules()
+        ->map(fn (Module $m) => $m->key())
+        ->implode(',');
+
+    expect($keys)->toBeString()
+        ->toContain('module_general')
+        ->toContain(',');
+});
+
+it('rejects configs with master values', function () {
+    $withoutMaster = Info::capture()->configs()
+        ->reject(fn (Config $c) => $c->hasMasterValue());
+
+    expect($withoutMaster->count())->toBeGreaterThan(0);
+
+    foreach ($withoutMaster as $config) {
+        expect($config->hasMasterValue())->toBeFalse();
     }
+});
 
-    #[Test]
-    public function push_and_prepend(): void
-    {
-        $items = new Items([2]);
-        $items->push(3)->prepend(1);
+it('has unique module keys', function () {
+    $info = Info::capture();
+    $allKeys = $info->modules()->map(fn (Module $m) => $m->key());
 
-        $this->assertEquals([1, 2, 3], $items->all());
-    }
+    expect($allKeys->unique()->count())->toBe($allKeys->count());
+});
 
-    #[Test]
-    public function first_without_callback(): void
-    {
-        $this->assertEquals('a', (new Items(['a', 'b']))->first());
-        $this->assertNull((new Items)->first());
-    }
+it('returns model objects from toArray', function () {
+    $arr = Info::capture()->modules()->toArray();
 
-    #[Test]
-    public function first_with_callback(): void
-    {
-        $items = new Items([1, 2, 3, 4]);
-
-        $this->assertEquals(3, $items->first(fn ($v) => $v > 2));
-        $this->assertNull($items->first(fn ($v) => $v > 10));
-    }
-
-    #[Test]
-    public function last_without_callback(): void
-    {
-        $this->assertEquals('c', (new Items(['a', 'b', 'c']))->last());
-        $this->assertNull((new Items)->last());
-    }
-
-    #[Test]
-    public function last_with_callback(): void
-    {
-        $items = new Items([1, 2, 3, 4]);
-
-        $this->assertEquals(4, $items->last(fn ($v) => $v > 2));
-        $this->assertNull($items->last(fn ($v) => $v > 10));
-    }
-
-    #[Test]
-    public function get_by_index(): void
-    {
-        $items = new Items(['a', 'b', 'c']);
-
-        $this->assertEquals('b', $items->get(1));
-        $this->assertNull($items->get(99));
-    }
-
-    #[Test]
-    public function map(): void
-    {
-        $items = new Items([1, 2, 3]);
-        $mapped = $items->map(fn ($v) => $v * 2);
-
-        $this->assertEquals([2, 4, 6], $mapped->all());
-        $this->assertEquals([1, 2, 3], $items->all()); // original unchanged
-    }
-
-    #[Test]
-    public function flat_map(): void
-    {
-        $items = new Items([[1, 2], [3, 4]]);
-        $flat = $items->flatMap(fn ($v) => $v);
-
-        $this->assertEquals([1, 2, 3, 4], $flat->all());
-    }
-
-    #[Test]
-    public function flat_map_with_empty_results(): void
-    {
-        $items = new Items([1, 2, 3]);
-        $flat = $items->flatMap(fn () => []);
-
-        $this->assertTrue($flat->isEmpty());
-    }
-
-    #[Test]
-    public function filter_with_callback(): void
-    {
-        $items = new Items([1, 2, 3, 4, 5]);
-        $filtered = $items->filter(fn ($v) => $v > 3);
-
-        $this->assertEquals([4, 5], $filtered->all());
-    }
-
-    #[Test]
-    public function filter_without_callback_removes_falsy(): void
-    {
-        $items = new Items([0, 1, '', 'a', null, false, true]);
-        $filtered = $items->filter();
-
-        $this->assertEquals([1, 'a', true], $filtered->all());
-    }
-
-    #[Test]
-    public function reject(): void
-    {
-        $items = new Items([1, 2, 3, 4, 5]);
-        $rejected = $items->reject(fn ($v) => $v > 3);
-
-        $this->assertEquals([1, 2, 3], $rejected->all());
-    }
-
-    #[Test]
-    public function each(): void
-    {
-        $items = new Items([1, 2, 3]);
-        $collected = [];
-        $result = $items->each(function ($v, $k) use (&$collected) {
-            $collected[] = "{$k}:{$v}";
-        });
-
-        $this->assertEquals(['0:1', '1:2', '2:3'], $collected);
-        $this->assertSame($items, $result); // returns self
-    }
-
-    #[Test]
-    public function implode(): void
-    {
-        $items = new Items(['a', 'b', 'c']);
-
-        $this->assertEquals('a, b, c', $items->implode(', '));
-    }
-
-    #[Test]
-    public function skip(): void
-    {
-        $items = new Items([1, 2, 3, 4, 5]);
-
-        $this->assertEquals([3, 4, 5], $items->skip(2)->all());
-        $this->assertEquals([], $items->skip(10)->all());
-    }
-
-    #[Test]
-    public function unique(): void
-    {
-        $items = new Items([1, 2, 2, 3, 3, 3]);
-
-        $this->assertEquals([1, 2, 3], $items->unique()->all());
-    }
-
-    #[Test]
-    public function values_reindexes(): void
-    {
-        $items = new Items([10 => 'a', 20 => 'b']);
-        $reindexed = $items->values();
-
-        $this->assertEquals(['a', 'b'], $reindexed->all());
-    }
-
-    #[Test]
-    public function to_array_is_alias_of_all(): void
-    {
-        $items = new Items([1, 2, 3]);
-
-        $this->assertEquals($items->all(), $items->toArray());
-    }
-
-    #[Test]
-    public function contains_with_value(): void
-    {
-        $items = new Items([1, 2, 3]);
-
-        $this->assertTrue($items->contains(2));
-        $this->assertFalse($items->contains(99));
-    }
-
-    #[Test]
-    public function contains_with_callback(): void
-    {
-        $items = new Items([1, 2, 3]);
-
-        $this->assertTrue($items->contains(fn ($v) => $v > 2));
-        $this->assertFalse($items->contains(fn ($v) => $v > 10));
-    }
-
-    #[Test]
-    public function contains_uses_strict_comparison(): void
-    {
-        $items = new Items([1, 2, 3]);
-
-        $this->assertFalse($items->contains('1'));
-    }
-
-    #[Test]
-    public function it_is_iterable(): void
-    {
-        $items = new Items([1, 2, 3]);
-        $collected = [];
-
-        foreach ($items as $item) {
-            $collected[] = $item;
-        }
-
-        $this->assertEquals([1, 2, 3], $collected);
-    }
-
-    #[Test]
-    public function it_is_countable(): void
-    {
-        $items = new Items([1, 2, 3]);
-
-        $this->assertCount(3, $items);
-    }
-
-    #[Test]
-    public function it_is_json_serializable(): void
-    {
-        $items = new Items([1, 2, 3]);
-
-        $this->assertEquals('[1,2,3]', json_encode($items));
-    }
-
-    #[Test]
-    public function json_serialize_handles_nested_json_serializable(): void
-    {
-        $inner = new Items([1, 2]);
-        $outer = new Items([$inner]);
-
-        $this->assertEquals('[[1,2]]', json_encode($outer));
-    }
-
-    // ── Integration tests with model objects ─────────────────────────
-
-    #[Test]
-    public function filter_and_map_on_modules(): void
-    {
-        $info = Info::capture();
-        $names = $info->modules()
-            ->filter(fn (Module $m) => strlen($m->name()) < 5)
-            ->map(fn (Module $m) => $m->name());
-
-        $this->assertInstanceOf(Items::class, $names);
-        $this->assertGreaterThan(0, $names->count());
-        foreach ($names as $name) {
-            $this->assertLessThan(5, strlen($name));
-        }
-    }
-
-    #[Test]
-    public function each_on_modules(): void
-    {
-        $info = Info::capture();
-        $names = [];
-        $info->modules()->each(function (Module $m) use (&$names) {
-            $names[] = $m->name();
-        });
-
-        $this->assertGreaterThan(5, count($names));
-        $this->assertEquals($info->modules()->count(), count($names));
-    }
-
-    #[Test]
-    public function first_and_last_on_modules(): void
-    {
-        $info = Info::capture();
-
-        $this->assertEquals('General', $info->modules()->first()->name());
-        $this->assertNotNull($info->modules()->last());
-        $this->assertNotEquals(
-            $info->modules()->first()->name(),
-            $info->modules()->last()->name()
-        );
-    }
-
-    #[Test]
-    public function contains_on_modules(): void
-    {
-        $info = Info::capture();
-
-        $this->assertTrue(
-            $info->modules()->contains(fn (Module $m) => $m->name() === 'General')
-        );
-        $this->assertFalse(
-            $info->modules()->contains(fn (Module $m) => $m->name() === 'NonexistentModule')
-        );
-    }
-
-    #[Test]
-    public function flat_map_configs_across_modules(): void
-    {
-        $info = Info::capture();
-
-        // This is exactly how PhpInfo::configs() works internally
-        $allConfigs = $info->modules()->flatMap(fn (Module $m) => $m->configs());
-
-        $this->assertInstanceOf(Items::class, $allConfigs);
-        $this->assertGreaterThan(50, $allConfigs->count());
-        $this->assertInstanceOf(Config::class, $allConfigs->first());
-    }
-
-    #[Test]
-    public function chained_filter_map_first_on_configs(): void
-    {
-        $info = Info::capture();
-
-        $result = $info->configs()
-            ->filter(fn (Config $c) => $c->hasMasterValue())
-            ->map(fn (Config $c) => $c->name())
-            ->first();
-
-        // There should be at least one config with a master value
-        $this->assertNotNull($result);
-        $this->assertIsString($result);
-    }
-
-    #[Test]
-    public function skip_and_count_on_modules(): void
-    {
-        $info = Info::capture();
-        $total = $info->modules()->count();
-        $skipped = $info->modules()->skip(2);
-
-        $this->assertEquals($total - 2, $skipped->count());
-        $this->assertNotEquals('General', $skipped->first()->name());
-    }
-
-    #[Test]
-    public function map_implode_for_module_keys(): void
-    {
-        $info = Info::capture();
-        $keys = $info->modules()
-            ->map(fn (Module $m) => $m->key())
-            ->implode(',');
-
-        $this->assertIsString($keys);
-        $this->assertStringContainsString('module_general', $keys);
-        $this->assertStringContainsString(',', $keys);
-    }
-
-    #[Test]
-    public function reject_on_configs(): void
-    {
-        $info = Info::capture();
-
-        $withoutMaster = $info->configs()
-            ->reject(fn (Config $c) => $c->hasMasterValue());
-
-        $this->assertGreaterThan(0, $withoutMaster->count());
-        foreach ($withoutMaster as $config) {
-            $this->assertFalse($config->hasMasterValue());
-        }
-    }
-
-    #[Test]
-    public function unique_on_mapped_values(): void
-    {
-        $info = Info::capture();
-        $allKeys = $info->modules()->map(fn (Module $m) => $m->key());
-        $uniqueKeys = $allKeys->unique();
-
-        $this->assertEquals($allKeys->count(), $uniqueKeys->count());
-    }
-
-    #[Test]
-    public function to_array_returns_model_objects(): void
-    {
-        $info = Info::capture();
-        $arr = $info->modules()->toArray();
-
-        $this->assertIsArray($arr);
-        $this->assertInstanceOf(Module::class, $arr[0]);
-    }
-}
+    expect($arr)->toBeArray()
+        ->and($arr[0])->toBeInstanceOf(Module::class);
+});

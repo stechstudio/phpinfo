@@ -1,124 +1,78 @@
 <?php
 
-namespace STS\Phpinfo\Tests;
-
-use InvalidArgumentException;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 use STS\Phpinfo\Info;
 use STS\Phpinfo\PhpInfo;
 
-class InfoTest extends TestCase
-{
-    #[Test]
-    public function from_html_returns_phpinfo(): void
-    {
-        $html = file_get_contents(__DIR__.'/fixtures/html-php83.html');
-        $info = Info::fromHtml($html);
+it('creates from html', function () {
+    $info = Info::fromHtml(file_get_contents(__DIR__.'/fixtures/html-php83.html'));
 
-        $this->assertInstanceOf(PhpInfo::class, $info);
-    }
+    expect($info)->toBeInstanceOf(PhpInfo::class);
+});
 
-    #[Test]
-    public function from_text_returns_phpinfo(): void
-    {
-        $text = file_get_contents(__DIR__.'/fixtures/cli-php83.txt');
-        $info = Info::fromText($text);
+it('creates from text', function () {
+    $info = Info::fromText(file_get_contents(__DIR__.'/fixtures/cli-php83.txt'));
 
-        $this->assertInstanceOf(PhpInfo::class, $info);
-    }
+    expect($info)->toBeInstanceOf(PhpInfo::class);
+});
 
-    #[Test]
-    public function detect_identifies_html(): void
-    {
-        $html = file_get_contents(__DIR__.'/fixtures/html-php83.html');
-        $info = Info::detect($html);
+it('detects html format', function () {
+    $info = Info::detect(file_get_contents(__DIR__.'/fixtures/html-php83.html'));
 
-        $this->assertInstanceOf(PhpInfo::class, $info);
-    }
+    expect($info)->toBeInstanceOf(PhpInfo::class);
+});
 
-    #[Test]
-    public function detect_identifies_text(): void
-    {
-        $text = file_get_contents(__DIR__.'/fixtures/cli-php83.txt');
-        $info = Info::detect($text);
+it('detects text format', function () {
+    $info = Info::detect(file_get_contents(__DIR__.'/fixtures/cli-php83.txt'));
 
-        $this->assertInstanceOf(PhpInfo::class, $info);
-    }
+    expect($info)->toBeInstanceOf(PhpInfo::class);
+});
 
-    #[Test]
-    public function detect_throws_for_invalid_content(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
+it('throws for invalid content on detect', function () {
+    Info::detect('this is not phpinfo output');
+})->throws(InvalidArgumentException::class);
 
-        Info::detect('this is not phpinfo output');
-    }
+it('captures phpinfo', function () {
+    $info = Info::capture();
 
-    #[Test]
-    public function capture_returns_phpinfo(): void
-    {
-        $info = Info::capture();
+    expect($info)->toBeInstanceOf(PhpInfo::class)
+        ->and($info->version())->not->toBeEmpty()
+        ->and($info->modules()->count())->toBeGreaterThan(5);
+});
 
-        $this->assertInstanceOf(PhpInfo::class, $info);
-        $this->assertNotEmpty($info->version());
-        $this->assertGreaterThan(5, $info->modules()->count());
-    }
+it('captures with info constants', function () {
+    $full = Info::capture(INFO_ALL);
+    $general = Info::capture(INFO_GENERAL);
 
-    #[Test]
-    public function capture_accepts_info_constants(): void
-    {
-        $full = Info::capture(INFO_ALL);
-        $general = Info::capture(INFO_GENERAL);
+    expect($full->modules()->count())->toBeGreaterThan($general->modules()->count())
+        ->and($general->version())->not->toBeEmpty();
+});
 
-        $this->assertGreaterThan(
-            $general->modules()->count(),
-            $full->modules()->count()
-        );
+it('captures with info modules excludes environment', function () {
+    $info = Info::capture(INFO_MODULES);
 
-        // INFO_GENERAL should still have version
-        $this->assertNotEmpty($general->version());
-    }
+    expect($info->hasModule('Environment'))->toBeFalse()
+        ->and($info->modules()->count())->toBeGreaterThan(0);
+});
 
-    #[Test]
-    public function capture_with_info_modules_excludes_environment(): void
-    {
-        $info = Info::capture(INFO_MODULES);
+it('has prettyphpinfo function', function () {
+    expect(function_exists('prettyphpinfo'))->toBeTrue();
+});
 
-        $this->assertFalse($info->hasModule('Environment'));
-        $this->assertGreaterThan(0, $info->modules()->count());
-    }
+it('prettyphpinfo produces html output', function () {
+    ob_start();
+    prettyphpinfo(INFO_GENERAL);
+    $output = ob_get_clean();
 
-    #[Test]
-    public function prettyphpinfo_function_exists(): void
-    {
-        $this->assertTrue(function_exists('prettyphpinfo'));
-    }
+    expect($output)->toContain('phpinfo()')
+        ->toContain('</html>');
+});
 
-    #[Test]
-    public function prettyphpinfo_produces_output(): void
-    {
-        ob_start();
-        prettyphpinfo(INFO_GENERAL);
-        $output = ob_get_clean();
+it('delegates static calls to capture', function () {
+    expect(Info::version())
+        ->not->toBeEmpty()
+        ->toMatch('/^\d+\.\d+\.\d+/');
+});
 
-        $this->assertStringContainsString('phpinfo()', $output);
-        $this->assertStringContainsString('</html>', $output);
-    }
-
-    #[Test]
-    public function call_static_delegates_to_capture(): void
-    {
-        $version = Info::version();
-
-        $this->assertNotEmpty($version);
-        $this->assertMatchesRegularExpression('/^\d+\.\d+\.\d+/', $version);
-    }
-
-    #[Test]
-    public function call_static_modules(): void
-    {
-        $modules = Info::modules();
-
-        $this->assertGreaterThan(5, $modules->count());
-    }
-}
+it('delegates static modules call', function () {
+    expect(Info::modules()->count())->toBeGreaterThan(5);
+});
