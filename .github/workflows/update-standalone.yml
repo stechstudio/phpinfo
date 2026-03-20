@@ -1,0 +1,43 @@
+name: Update standalone script
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/Parsers/parse_text.php'
+      - 'dist/go.php'
+      - 'dist/styles.css'
+      - 'dist/app.js'
+      - 'build-go.php'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Build standalone script
+        run: php build-go.php
+
+      - name: Push to landing page repo
+        run: |
+          cd $(mktemp -d)
+          git clone --depth 1 https://x-access-token:${TOKEN}@github.com/stechstudio/PrettyPHPInfo.git .
+          cp $GITHUB_WORKSPACE/dist/go-standalone.php go
+          if git diff --quiet; then
+            echo "No changes to standalone script"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add go
+          git commit -m "Update standalone script from stechstudio/phpinfo@${GITHUB_SHA::7}"
+          git push
+        env:
+          TOKEN: ${{ secrets.LANDING_PAGE_TOKEN }}
