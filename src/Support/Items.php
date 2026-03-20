@@ -97,6 +97,15 @@ class Items implements Countable, IteratorAggregate, JsonSerializable
         return $this->filter(fn($item) => !$callback($item));
     }
 
+    public function each(callable $callback): static
+    {
+        foreach ($this->items as $key => $item) {
+            $callback($item, $key);
+        }
+
+        return $this;
+    }
+
     public function implode(string $glue): string
     {
         return implode($glue, $this->items);
