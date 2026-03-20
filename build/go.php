@@ -324,7 +324,7 @@ if (!stream_isatty(STDOUT)) {
     exit;
 }
 
-$file = getcwd() . DIRECTORY_SEPARATOR . 'phpinfo.html';
+$file = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpinfo.html';
 file_put_contents($file, $html);
 
 $opened = match (PHP_OS_FAMILY) {
@@ -335,6 +335,6 @@ $opened = match (PHP_OS_FAMILY) {
 };
 
 fwrite(STDERR, $opened
-    ? "Saved to phpinfo.html and opened in your browser.\n"
-    : "Saved to phpinfo.html\n"
+    ? "Opened in your browser.\n"
+    : "Saved to $file\n"
 );
