@@ -8,7 +8,7 @@
  * This script captures phpinfo() locally, parses it into a structured format,
  * and outputs a complete self-contained HTML page. Nothing leaves your machine.
  *
- * @see https://github.com/stechstudio/phpinfo
+ * @see https://prettyphpinfo.com
  */
 
 // ── Capture phpinfo ───────────────────────────────────────────────────
