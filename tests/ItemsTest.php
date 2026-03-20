@@ -4,6 +4,10 @@ namespace STS\Phpinfo\Tests;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use STS\Phpinfo\Info;
+use STS\Phpinfo\Models\Config;
+use STS\Phpinfo\Models\Group;
+use STS\Phpinfo\Models\Module;
 use STS\Phpinfo\Support\Items;
 
 class ItemsTest extends TestCase
@@ -259,5 +263,147 @@ class ItemsTest extends TestCase
         $outer = new Items([$inner]);
 
         $this->assertEquals('[[1,2]]', json_encode($outer));
+    }
+
+    // ── Integration tests with model objects ─────────────────────────
+
+    #[Test]
+    public function filter_and_map_on_modules(): void
+    {
+        $info = Info::capture();
+        $names = $info->modules()
+            ->filter(fn(Module $m) => strlen($m->name()) < 5)
+            ->map(fn(Module $m) => $m->name());
+
+        $this->assertInstanceOf(Items::class, $names);
+        $this->assertGreaterThan(0, $names->count());
+        foreach ($names as $name) {
+            $this->assertLessThan(5, strlen($name));
+        }
+    }
+
+    #[Test]
+    public function each_on_modules(): void
+    {
+        $info = Info::capture();
+        $names = [];
+        $info->modules()->each(function (Module $m) use (&$names) {
+            $names[] = $m->name();
+        });
+
+        $this->assertGreaterThan(5, count($names));
+        $this->assertEquals($info->modules()->count(), count($names));
+    }
+
+    #[Test]
+    public function first_and_last_on_modules(): void
+    {
+        $info = Info::capture();
+
+        $this->assertEquals('General', $info->modules()->first()->name());
+        $this->assertNotNull($info->modules()->last());
+        $this->assertNotEquals(
+            $info->modules()->first()->name(),
+            $info->modules()->last()->name()
+        );
+    }
+
+    #[Test]
+    public function contains_on_modules(): void
+    {
+        $info = Info::capture();
+
+        $this->assertTrue(
+            $info->modules()->contains(fn(Module $m) => $m->name() === 'General')
+        );
+        $this->assertFalse(
+            $info->modules()->contains(fn(Module $m) => $m->name() === 'NonexistentModule')
+        );
+    }
+
+    #[Test]
+    public function flat_map_configs_across_modules(): void
+    {
+        $info = Info::capture();
+
+        // This is exactly how PhpInfo::configs() works internally
+        $allConfigs = $info->modules()->flatMap(fn(Module $m) => $m->configs());
+
+        $this->assertInstanceOf(Items::class, $allConfigs);
+        $this->assertGreaterThan(50, $allConfigs->count());
+        $this->assertInstanceOf(Config::class, $allConfigs->first());
+    }
+
+    #[Test]
+    public function chained_filter_map_first_on_configs(): void
+    {
+        $info = Info::capture();
+
+        $result = $info->configs()
+            ->filter(fn(Config $c) => $c->hasMasterValue())
+            ->map(fn(Config $c) => $c->name())
+            ->first();
+
+        // There should be at least one config with a master value
+        $this->assertNotNull($result);
+        $this->assertIsString($result);
+    }
+
+    #[Test]
+    public function skip_and_count_on_modules(): void
+    {
+        $info = Info::capture();
+        $total = $info->modules()->count();
+        $skipped = $info->modules()->skip(2);
+
+        $this->assertEquals($total - 2, $skipped->count());
+        $this->assertNotEquals('General', $skipped->first()->name());
+    }
+
+    #[Test]
+    public function map_implode_for_module_keys(): void
+    {
+        $info = Info::capture();
+        $keys = $info->modules()
+            ->map(fn(Module $m) => $m->key())
+            ->implode(',');
+
+        $this->assertIsString($keys);
+        $this->assertStringContainsString('module_general', $keys);
+        $this->assertStringContainsString(',', $keys);
+    }
+
+    #[Test]
+    public function reject_on_configs(): void
+    {
+        $info = Info::capture();
+
+        $withoutMaster = $info->configs()
+            ->reject(fn(Config $c) => $c->hasMasterValue());
+
+        $this->assertGreaterThan(0, $withoutMaster->count());
+        foreach ($withoutMaster as $config) {
+            $this->assertFalse($config->hasMasterValue());
+        }
+    }
+
+    #[Test]
+    public function unique_on_mapped_values(): void
+    {
+        $info = Info::capture();
+        $allKeys = $info->modules()->map(fn(Module $m) => $m->key());
+        $uniqueKeys = $allKeys->unique();
+
+        $this->assertEquals($allKeys->count(), $uniqueKeys->count());
+    }
+
+    #[Test]
+    public function to_array_returns_model_objects(): void
+    {
+        $info = Info::capture();
+        $arr = $info->modules()->toArray();
+
+        $this->assertIsArray($arr);
+        $this->assertInstanceOf(Module::class, $arr[0]);
     }
 }
