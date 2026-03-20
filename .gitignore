@@ -6,3 +6,4 @@ package-lock.json
 .idea
 .phpunit.cache
 phpinfo.html
+dist/go-standalone.php
