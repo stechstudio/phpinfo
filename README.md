@@ -1,6 +1,7 @@
 # Pretty PHP Info
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/stechstudio/phpinfo.svg?style=flat-square)](https://packagist.org/packages/stechstudio/phpinfo)
+[![Total Downloads](https://img.shields.io/packagist/dt/stechstudio/phpinfo.svg?style=flat-square)](https://packagist.org/packages/stechstudio/phpinfo)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
 [![Tests](https://img.shields.io/github/actions/workflow/status/stechstudio/phpinfo/tests.yml?branch=main&style=flat-square&label=tests)](https://github.com/stechstudio/phpinfo/actions/workflows/tests.yml)
 
