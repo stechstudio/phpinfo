@@ -22,7 +22,7 @@
     }
   ],
   "require": {
-    "php": "^8.0",
+    "php": "^8.3",
     "ext-dom": "*"
   },
   "require-dev": {
