@@ -30,6 +30,9 @@ prettyphpinfo();
 
 That's it. You'll get a pretty, searchable, dark-mode-ready page instead of the default `phpinfo()` output.
 
+<img width="1440" height="922" alt="phpinfo-screenshot" src="https://github.com/user-attachments/assets/c49c866a-4b20-4a49-a3ea-0185365a161e" />
+
+
 Just like the native `phpinfo()`, you can pass `INFO_*` constants to control which sections are displayed:
 
 ```php
