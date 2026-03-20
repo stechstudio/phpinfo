@@ -2,7 +2,6 @@
 
 namespace STS\Phpinfo\Models;
 
-use Illuminate\Support\Collection;
 use JsonSerializable;
 use STS\Phpinfo\Support\Str;
 
@@ -15,12 +14,8 @@ class Config implements JsonSerializable
         protected bool $hasMasterValue = false,
     ) {}
 
-    public static function fromValues(Collection|array $values): static
+    public static function fromValues(array $values): static
     {
-        if ($values instanceof Collection) {
-            $values = $values->all();
-        }
-
         $hasThreeColumns = count($values) >= 3;
 
         return new static(

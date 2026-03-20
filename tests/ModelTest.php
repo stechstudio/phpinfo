@@ -128,11 +128,11 @@ class ModelTest extends TestCase
     #[Test]
     public function group_stores_configs_and_metadata(): void
     {
-        $configs = collect([
+        $configs = items([
             new Config('a', '1'),
             new Config('b', '2'),
         ]);
-        $headings = collect(['Directive', 'Local Value', 'Master Value']);
+        $headings = items(['Directive', 'Local Value', 'Master Value']);
 
         $group = new Group($configs, $headings, 'My Group', 'A note');
 
@@ -146,7 +146,7 @@ class ModelTest extends TestCase
     #[Test]
     public function group_with_no_headings(): void
     {
-        $group = new Group(collect());
+        $group = new Group(items());
 
         $this->assertFalse($group->hasHeadings());
         $this->assertEquals(0, $group->headings()->count());
@@ -156,8 +156,8 @@ class ModelTest extends TestCase
     public function group_short_heading_strips_value(): void
     {
         $group = new Group(
-            collect(),
-            collect(['Directive', 'Local Value', 'Master Value'])
+            items(),
+            items(['Directive', 'Local Value', 'Master Value'])
         );
 
         $this->assertEquals('Local', $group->shortHeading(1));
@@ -188,7 +188,7 @@ class ModelTest extends TestCase
     #[Test]
     public function group_add_note(): void
     {
-        $group = new Group(collect());
+        $group = new Group(items());
         $result = $group->addNote('Added note');
 
         $this->assertSame($group, $result);
@@ -198,7 +198,7 @@ class ModelTest extends TestCase
     #[Test]
     public function group_key_uses_name_when_available(): void
     {
-        $group = new Group(collect(), null, 'Session');
+        $group = new Group(items(), null, 'Session');
 
         $this->assertStringStartsWith('group_', $group->key());
         $this->assertStringContainsString('session', $group->key());
@@ -207,7 +207,7 @@ class ModelTest extends TestCase
     #[Test]
     public function group_key_uses_hash_when_no_name(): void
     {
-        $group = new Group(collect([new Config('a', '1')]));
+        $group = new Group(items([new Config('a', '1')]));
 
         $this->assertStringStartsWith('group_', $group->key());
     }
@@ -216,8 +216,8 @@ class ModelTest extends TestCase
     public function group_is_json_serializable(): void
     {
         $group = new Group(
-            collect([new Config('test', 'value')]),
-            collect(['Directive', 'Value']),
+            items([new Config('test', 'value')]),
+            items(['Directive', 'Value']),
             'Test Group',
             'A note'
         );
@@ -237,8 +237,8 @@ class ModelTest extends TestCase
     #[Test]
     public function module_stores_name_and_groups(): void
     {
-        $group = new Group(collect([new Config('a', '1')]));
-        $module = new Module('curl', collect([$group]));
+        $group = new Group(items([new Config('a', '1')]));
+        $module = new Module('curl', items([$group]));
 
         $this->assertEquals('curl', $module->name());
         $this->assertEquals(1, $module->groups()->count());
@@ -247,7 +247,7 @@ class ModelTest extends TestCase
     #[Test]
     public function module_key_is_prefixed_and_slugified(): void
     {
-        $module = new Module('Zend OPcache', collect());
+        $module = new Module('Zend OPcache', items());
 
         $this->assertStringStartsWith('module_', $module->key());
         $this->assertEquals('module_zend_opcache', $module->key());
@@ -256,14 +256,14 @@ class ModelTest extends TestCase
     #[Test]
     public function module_flattens_configs_from_groups(): void
     {
-        $group1 = new Group(collect([
+        $group1 = new Group(items([
             new Config('a', '1'),
             new Config('b', '2'),
         ]));
-        $group2 = new Group(collect([
+        $group2 = new Group(items([
             new Config('c', '3'),
         ]));
-        $module = new Module('test', collect([$group1, $group2]));
+        $module = new Module('test', items([$group1, $group2]));
 
         $this->assertEquals(3, $module->configs()->count());
     }
@@ -271,10 +271,10 @@ class ModelTest extends TestCase
     #[Test]
     public function module_can_query_configs(): void
     {
-        $group = new Group(collect([
+        $group = new Group(items([
             new Config('max_size', '100', '200', hasMasterValue: true),
         ]));
-        $module = new Module('test', collect([$group]));
+        $module = new Module('test', items([$group]));
 
         $this->assertTrue($module->hasConfig('max_size'));
         $this->assertFalse($module->hasConfig('nonexistent'));
@@ -286,7 +286,7 @@ class ModelTest extends TestCase
     public function module_combined_key_for_config(): void
     {
         $config = new Config('max_size', '100');
-        $module = new Module('test', collect());
+        $module = new Module('test', items());
 
         $combined = $module->combinedKeyFor($config);
 
@@ -297,8 +297,8 @@ class ModelTest extends TestCase
     #[Test]
     public function module_is_json_serializable(): void
     {
-        $group = new Group(collect([new Config('a', '1')]));
-        $module = new Module('curl', collect([$group]));
+        $group = new Group(items([new Config('a', '1')]));
+        $module = new Module('curl', items([$group]));
 
         $data = json_decode(json_encode($module), true);
 

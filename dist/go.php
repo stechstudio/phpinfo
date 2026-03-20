@@ -3,10 +3,9 @@
  * Pretty PHP Info — Standalone Script
  *
  * Usage:
- *   curl -sS https://prettyphpinfo.com/go | php > phpinfo.html && open phpinfo.html
+ *   curl -sSL prettyphpinfo.com/go | php
  *
- * This script captures phpinfo() locally (excluding environment variables
- * and PHP variables for security), parses it into a structured format,
+ * This script captures phpinfo() locally, parses it into a structured format,
  * and outputs a complete self-contained HTML page. Nothing leaves your machine.
  *
  * @see https://github.com/stechstudio/phpinfo
@@ -18,207 +17,13 @@ ob_start();
 phpinfo();
 $raw = ob_get_clean();
 
-// ── Minimal text parser (no dependencies) ─────────────────────────────
-
-function pp_slug(string $text): string {
-    return strtolower(trim(preg_replace('/\W+/', '_', $text), '_'));
-}
-
-function pp_parse(string $raw): array {
-    $lines = explode("\n", str_replace("\r\n", "\n", $raw));
-    $i = 0;
-    $len = count($lines);
-
-    // Helpers
-    $current = function() use (&$lines, &$i, $len): ?string {
-        return $i < $len ? $lines[$i] : null;
-    };
-    $advance = function() use (&$i, $len, &$lines): void {
-        do { $i++; } while ($i < $len && ($lines[$i] === '' || $lines[$i] === 'Configuration'));
-    };
-    $isDivider = function() use ($current): bool {
-        return $current() !== null && str_contains($current(), '_______________________________________________________________________');
-    };
-    $hasItems = function() use ($current): bool {
-        return $current() !== null && str_contains($current(), ' => ');
-    };
-    $items = function() use ($current): array {
-        return explode(' => ', $current() ?? '');
-    };
-
-    // Skip "phpinfo()"
-    $advance();
-
-    // PHP Version
-    $version = '';
-    if ($hasItems() && ($items()[0] ?? '') === 'PHP Version') {
-        $parts = $items();
-        $version = $parts[1] ?? '';
-        $advance();
-    }
-
-    $modules = [];
-
-    // General module
-    $general = pp_parseModule('General', $lines, $i, $len);
-    if (!empty($general['groups'])) {
-        $modules[] = $general;
-    }
-
-    // Skip divider
-    if ($i < $len && $isDivider()) {
-        $advance();
-    }
-
-    // Module loop
-    while ($i < $len) {
-        $line = $current();
-        if ($line === null) break;
-        if ($isDivider()) { $advance(); continue; }
-
-        // Module name detection: no " => ", next line is blank, short text
-        if (!$hasItems() && strlen($line) < 80 && ($i + 1 >= $len || $lines[$i + 1] === '')) {
-            $moduleName = $line;
-            $advance();
-            $modules[] = pp_parseModule($moduleName, $lines, $i, $len);
-        } else {
-            break;
-        }
-    }
-
-    return ['version' => $version, 'modules' => $modules];
-}
-
-function pp_parseModule(string $name, array &$lines, int &$i, int $len): array {
-    $groups = [];
-
-    while ($i < $len) {
-        $group = pp_parseGroup($lines, $i, $len);
-        if ($group === null) break;
-        $groups[] = $group;
-    }
-
-    return [
-        'key' => 'module_' . pp_slug($name),
-        'name' => $name,
-        'groups' => $groups,
-    ];
-}
-
-function pp_parseGroup(array &$lines, int &$i, int $len): ?array {
-    if ($i >= $len) return null;
-    $line = $lines[$i] ?? null;
-    if ($line === null) return null;
-
-    // Stop at dividers or blank-followed-by-short (module names)
-    if (str_contains($line, '_______________________________________________________________________')) return null;
-    if ($line === '') { $i++; return pp_parseGroup($lines, $i, $len); }
-
-    // Check if this looks like a module name (stop parsing groups)
-    if (!str_contains($line, ' => ') && strlen($line) < 80 && ($i + 1 >= $len || $lines[$i + 1] === '')) {
-        return null;
-    }
-
-    $groupName = null;
-    $headings = [];
-    $shortHeadings = [];
-    $configs = [];
-    $note = null;
-
-    // Group title: no " => ", next line is NOT blank, short text, not a heading keyword
-    if (!str_contains($line, ' => ') && strlen($line) < 80
-        && ($i + 1 < $len && $lines[$i + 1] !== '')
-        && !in_array($line, ['Directive', 'Variable', 'Contribution', 'Module'])) {
-
-        // But also check it's not a module name
-        if (!str_contains($line, '                     ') && ($i + 1 < $len && str_contains($lines[$i + 1], ' => ') || in_array($lines[$i + 1] ?? '', ['Directive', 'Variable']))) {
-            $groupName = $line;
-            do { $i++; } while ($i < $len && $lines[$i] === '');
-            $line = $lines[$i] ?? null;
-            if ($line === null) return null;
-        }
-    }
-
-    // Table heading
-    $parts = explode(' => ', $line);
-    if (in_array($parts[0], ['Directive', 'Variable', 'Contribution', 'Module'])) {
-        $headings = $parts;
-        $shortHeadings = array_map(fn($h) => trim(str_replace('Value', '', $h)), $parts);
-        do { $i++; } while ($i < $len && $lines[$i] === '');
-        $line = $lines[$i] ?? null;
-    }
-
-    // Determine expected column count
-    $expectedCols = count($headings) ?: null;
-
-    // Parse config rows
-    while ($i < $len) {
-        $line = $lines[$i];
-        if ($line === '' || str_contains($line, '_______________________________________________________________________')) break;
-
-        if (!str_contains($line, ' => ')) {
-            // Could be a note or end of group
-            if (strlen($line) > 50) {
-                // Note
-                $noteLines = [];
-                while ($i < $len && $lines[$i] !== '' && !str_contains($lines[$i], '_____')) {
-                    $noteLines[] = $lines[$i];
-                    $i++;
-                }
-                $note = trim(implode("\n", $noteLines));
-                break;
-            }
-            break;
-        }
-
-        $parts = explode(' => ', $line);
-        $configName = $parts[0];
-        $localValue = $parts[1] ?? null;
-        $masterValue = null;
-        $hasMaster = false;
-
-        if ($expectedCols === 3 && count($parts) >= 3) {
-            $masterValue = $parts[2];
-            $hasMaster = true;
-        } elseif ($expectedCols === null && count($parts) >= 3) {
-            $masterValue = $parts[2];
-            $hasMaster = true;
-        }
-
-        // Multi-line values (comma-continued)
-        while ($localValue !== null && str_ends_with($localValue, ',') && $i + 1 < $len) {
-            $i++;
-            $localValue .= "\n" . $lines[$i];
-        }
-
-        $configs[] = [
-            'key' => $configName === 'Names'
-                ? 'config_names_' . md5($localValue ?? '')
-                : 'config_' . pp_slug($configName),
-            'name' => $configName,
-            'hasMasterValue' => $hasMaster,
-            'localValue' => ($localValue === 'no value') ? null : $localValue,
-            'masterValue' => $hasMaster ? (($masterValue === 'no value') ? null : $masterValue) : null,
-        ];
-
-        $i++;
-    }
-
-    if (empty($configs) && $note === null && $groupName === null) return null;
-
-    return [
-        'key' => $groupName ? 'group_' . pp_slug($groupName) : 'group_' . md5(implode(',', array_column($configs, 'name'))),
-        'name' => $groupName,
-        'headings' => $headings,
-        'shortHeadings' => $shortHeadings,
-        'configs' => $configs,
-        'note' => $note,
-    ];
-}
+// ── Text parser (shared with package) ─────────────────────────────────
+require_once __DIR__ . '/../src/Parsers/parse_text.php';
 
 $info = pp_parse($raw);
 
 // ── Output complete HTML page ─────────────────────────────────────────
+ob_start();
 ?>
 <!doctype html>
 <html :class="darkMode && 'dark'" x-data="{ darkMode: localStorage.getItem('phpinfo-dark') === 'true' || (!localStorage.getItem('phpinfo-dark') && window.matchMedia('(prefers-color-scheme: dark)').matches) }" class="dark:[color-scheme:dark]">
@@ -511,3 +316,25 @@ $info = pp_parse($raw);
 </script>
 </body>
 </html>
+<?php
+$html = ob_get_clean();
+
+if (!stream_isatty(STDOUT)) {
+    echo $html;
+    exit;
+}
+
+$file = getcwd() . '/phpinfo.html';
+file_put_contents($file, $html);
+
+$opened = match (PHP_OS_FAMILY) {
+    'Darwin' => !exec('open ' . escapeshellarg($file)),
+    'Linux' => !exec('xdg-open ' . escapeshellarg($file) . ' 2>/dev/null &'),
+    'Windows' => !exec('start "" ' . escapeshellarg($file)),
+    default => false,
+};
+
+fwrite(STDERR, $opened
+    ? "Saved to phpinfo.html and opened in your browser.\n"
+    : "Saved to phpinfo.html\n"
+);

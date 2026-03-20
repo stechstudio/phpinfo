@@ -2,15 +2,15 @@
 
 namespace STS\Phpinfo\Models;
 
-use Illuminate\Support\Collection;
 use JsonSerializable;
+use STS\Phpinfo\Support\Items;
 use STS\Phpinfo\Support\Str;
 
 class Module implements JsonSerializable
 {
     public function __construct(
         protected string $name,
-        protected Collection $groups,
+        protected Items $groups,
     ) {}
 
     public function key(): string
@@ -23,14 +23,14 @@ class Module implements JsonSerializable
         return $this->name;
     }
 
-    public function groups(): Collection
+    public function groups(): Items
     {
         return $this->groups;
     }
 
-    public function configs(): Collection
+    public function configs(): Items
     {
-        return $this->groups()->flatMap->configs();
+        return $this->groups()->flatMap(fn(Group $g) => $g->configs());
     }
 
     public function hasConfig(string $name): bool

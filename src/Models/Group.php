@@ -2,15 +2,15 @@
 
 namespace STS\Phpinfo\Models;
 
-use Illuminate\Support\Collection;
 use JsonSerializable;
+use STS\Phpinfo\Support\Items;
 use STS\Phpinfo\Support\Str;
 
 class Group implements JsonSerializable
 {
     public function __construct(
-        protected Collection $configs,
-        protected ?Collection $headings = null,
+        protected Items $configs,
+        protected ?Items $headings = null,
         protected ?string $name = null,
         protected ?string $note = null,
     ) {}
@@ -18,14 +18,14 @@ class Group implements JsonSerializable
     public static function simple(string $name, string $configName, string $contents): static
     {
         return new static(
-            collect([new Config($configName, $contents)]),
+            items([new Config($configName, $contents)]),
             name: $name,
         );
     }
 
     public static function noteOnly(string $note): static
     {
-        return (new static(collect()))->addNote($note);
+        return (new static(items()))->addNote($note);
     }
 
     public function addNote(string $note): self
@@ -39,7 +39,7 @@ class Group implements JsonSerializable
     {
         return $this->name
             ? 'group_' . Str::slug($this->name)
-            : 'group_' . md5($this->configs()->map->name()->implode(','));
+            : 'group_' . md5($this->configs()->map(fn($c) => $c->name())->implode(','));
     }
 
     public function name(): ?string
@@ -52,7 +52,7 @@ class Group implements JsonSerializable
         return $this->note;
     }
 
-    public function configs(): Collection
+    public function configs(): Items
     {
         return $this->configs;
     }
@@ -62,9 +62,9 @@ class Group implements JsonSerializable
         return $this->headings !== null && $this->headings->count() > 0;
     }
 
-    public function headings(): Collection
+    public function headings(): Items
     {
-        return $this->hasHeadings() ? $this->headings : collect();
+        return $this->hasHeadings() ? $this->headings : items();
     }
 
     public function heading(int $index): ?string

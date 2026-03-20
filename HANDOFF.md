@@ -98,7 +98,7 @@ A zero-dependency PHP script that captures `phpinfo()`, parses it with a lightwe
 3. Output: `dist/go-standalone.php` (101KB, fully self-contained)
 4. This file is copied to `~/dev/prettyphpinfo/go` for the landing page `/go` endpoint
 
-**Usage:** `curl -sS prettyphpinfo.com/go | php > phpinfo.html && open phpinfo.html`
+**Usage:** `curl -sSL prettyphpinfo.com/go | php`
 
 **Important:** The standalone parser in `go.php` is a SEPARATE, simplified text parser written in plain PHP (functions `pp_parse`, `pp_parseModule`, `pp_parseGroup`, `pp_slug`). It does NOT use the package's classes or Collections. If the main parser logic changes, the standalone parser may need to be updated separately.
 

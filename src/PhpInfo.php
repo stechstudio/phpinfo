@@ -2,19 +2,19 @@
 
 namespace STS\Phpinfo;
 
-use Illuminate\Support\Collection;
 use JsonSerializable;
 use STS\Phpinfo\Models\Config;
 use STS\Phpinfo\Models\Module;
+use STS\Phpinfo\Support\Items;
 use STS\Phpinfo\Support\Str;
 
 class PhpInfo implements JsonSerializable
 {
-    protected ?Collection $flatConfigs = null;
+    protected ?Items $flatConfigs = null;
 
     public function __construct(
         protected string $version,
-        protected Collection $modules,
+        protected Items $modules,
     ) {}
 
     public function version(): string
@@ -22,7 +22,7 @@ class PhpInfo implements JsonSerializable
         return $this->version;
     }
 
-    public function modules(): Collection
+    public function modules(): Items
     {
         return $this->modules;
     }
@@ -40,9 +40,9 @@ class PhpInfo implements JsonSerializable
         return $this->module($name) !== null;
     }
 
-    public function configs(): Collection
+    public function configs(): Items
     {
-        return $this->flatConfigs ??= $this->modules()->flatMap->configs();
+        return $this->flatConfigs ??= $this->modules()->flatMap(fn(Module $m) => $m->configs());
     }
 
     public function config(string $name, string $which = 'local'): ?string

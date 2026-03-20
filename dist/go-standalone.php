@@ -3,10 +3,9 @@
  * Pretty PHP Info — Standalone Script
  *
  * Usage:
- *   curl -sS https://prettyphpinfo.com/go | php > phpinfo.html && open phpinfo.html
+ *   curl -sSL prettyphpinfo.com/go | php
  *
- * This script captures phpinfo() locally (excluding environment variables
- * and PHP variables for security), parses it into a structured format,
+ * This script captures phpinfo() locally, parses it into a structured format,
  * and outputs a complete self-contained HTML page. Nothing leaves your machine.
  *
  * @see https://github.com/stechstudio/phpinfo
@@ -18,7 +17,16 @@ ob_start();
 phpinfo();
 $raw = ob_get_clean();
 
-// ── Minimal text parser (no dependencies) ─────────────────────────────
+// ── Text parser (shared with package) ─────────────────────────────────
+/**
+ * Plain-PHP text parser for phpinfo() CLI output.
+ *
+ * This file is the single source of truth for text parsing. It is used by:
+ *   - The package's TextParser class (via require)
+ *   - The standalone script dist/go-standalone.php (inlined by build-go.php)
+ *
+ * No classes, no namespaces, no dependencies — just functions returning arrays.
+ */
 
 function pp_slug(string $text): string {
     return strtolower(trim(preg_replace('/\W+/', '_', $text), '_'));
@@ -75,6 +83,7 @@ function pp_parse(string $raw): array {
         $line = $current();
         if ($line === null) break;
         if ($isDivider()) { $advance(); continue; }
+        if ($line === 'PHP Credits' || $line === 'PHP License') break;
 
         // Module name detection: no " => ", next line is blank, short text
         if (!$hasItems() && strlen($line) < 80 && ($i + 1 >= $len || $lines[$i + 1] === '')) {
@@ -85,6 +94,13 @@ function pp_parse(string $raw): array {
             break;
         }
     }
+
+    // Credits and License
+    pp_parseCredits($modules, $lines, $i, $len);
+    pp_parseLicense($modules, $lines, $i, $len);
+
+    // Filter out empty modules (e.g. "Module Name" under Additional Modules)
+    $modules = array_values(array_filter($modules, fn($m) => !empty($m['groups'])));
 
     return ['version' => $version, 'modules' => $modules];
 }
@@ -191,6 +207,18 @@ function pp_parseGroup(array &$lines, int &$i, int $len): ?array {
             $localValue .= "\n" . $lines[$i];
         }
 
+        // Multi-line Array dumps (e.g. $_SERVER['argv'] => Array\n(\n...\n))
+        if ($localValue !== null && $localValue === 'Array') {
+            $i++;
+            while ($i < $len && trim($lines[$i]) !== ')') {
+                $localValue .= "\n" . $lines[$i];
+                $i++;
+            }
+            if ($i < $len) {
+                $localValue .= "\n" . $lines[$i];
+            }
+        }
+
         $configs[] = [
             'key' => $configName === 'Names'
                 ? 'config_names_' . md5($localValue ?? '')
@@ -216,9 +244,137 @@ function pp_parseGroup(array &$lines, int &$i, int $len): ?array {
     ];
 }
 
+function pp_parseCredits(array &$modules, array &$lines, int &$i, int $len): void {
+    if ($i >= $len || $lines[$i] !== 'PHP Credits') return;
+
+    $i++; // skip "PHP Credits"
+    while ($i < $len && $lines[$i] === '') $i++;
+
+    $groups = [];
+
+    while ($i < $len) {
+        $line = $lines[$i];
+        if ($line === '' && ($i + 1 >= $len || $lines[$i + 1] === 'PHP License' || str_contains($lines[$i + 1] ?? '', '____'))) break;
+        if ($line === 'PHP License' || str_contains($line, '_______________________________________________________________________')) break;
+
+        // Centered title (padded with spaces)
+        if (str_contains($line, '                     ')) {
+            $groupName = trim($line);
+            $i++;
+            while ($i < $len && $lines[$i] === '') $i++;
+
+            // Table heading?
+            $headings = [];
+            $shortHeadings = [];
+            $firstWord = explode(' => ', $lines[$i] ?? '')[0] ?? '';
+            if (in_array($firstWord, ['Contribution', 'Module', 'Authors'])) {
+                $headings = explode(' => ', $lines[$i]);
+                $shortHeadings = array_map(fn($h) => trim(str_replace('Value', '', $h)), $headings);
+                $i++;
+                while ($i < $len && $lines[$i] === '') $i++;
+            }
+
+            // Config rows
+            $configs = [];
+            while ($i < $len && $lines[$i] !== '' && !str_contains($lines[$i], '______')) {
+                if (str_contains($lines[$i], ' => ')) {
+                    $parts = explode(' => ', $lines[$i]);
+                    $configs[] = [
+                        'key' => 'config_' . pp_slug($parts[0]),
+                        'name' => $parts[0],
+                        'hasMasterValue' => false,
+                        'localValue' => $parts[1] ?? null,
+                        'masterValue' => null,
+                    ];
+                } else {
+                    break;
+                }
+                $i++;
+            }
+            while ($i < $len && $lines[$i] === '') $i++;
+
+            if (!empty($configs)) {
+                $groups[] = [
+                    'key' => 'group_' . pp_slug($groupName),
+                    'name' => $groupName,
+                    'headings' => $headings,
+                    'shortHeadings' => $shortHeadings,
+                    'configs' => $configs,
+                    'note' => null,
+                ];
+            }
+        }
+        // Simple title + value pair (e.g. "PHP Group" followed by names)
+        elseif (!str_contains($line, ' => ') && strlen($line) < 80) {
+            $groupName = $line;
+            $i++;
+            while ($i < $len && $lines[$i] === '') $i++;
+            $value = ($i < $len && $lines[$i] !== '' && !str_contains($lines[$i], '______')) ? $lines[$i] : null;
+            if ($value !== null) $i++;
+            while ($i < $len && $lines[$i] === '') $i++;
+
+            $groups[] = [
+                'key' => 'group_' . pp_slug($groupName),
+                'name' => $groupName,
+                'headings' => [],
+                'shortHeadings' => [],
+                'configs' => $value ? [[
+                    'key' => 'config_names_' . md5($value),
+                    'name' => 'Names',
+                    'hasMasterValue' => false,
+                    'localValue' => $value,
+                    'masterValue' => null,
+                ]] : [],
+                'note' => null,
+            ];
+        } else {
+            break;
+        }
+    }
+
+    if (!empty($groups)) {
+        $modules[] = [
+            'key' => 'module_' . pp_slug('PHP Credits'),
+            'name' => 'PHP Credits',
+            'groups' => $groups,
+        ];
+    }
+}
+
+function pp_parseLicense(array &$modules, array &$lines, int &$i, int $len): void {
+    if ($i >= $len || $lines[$i] !== 'PHP License') return;
+
+    $i++; // skip "PHP License"
+    while ($i < $len && $lines[$i] === '') $i++;
+
+    $text = [];
+    while ($i < $len) {
+        $text[] = $lines[$i];
+        $i++;
+    }
+
+    $note = trim(implode("\n", $text));
+    if ($note !== '') {
+        $modules[] = [
+            'key' => 'module_' . pp_slug('PHP License'),
+            'name' => 'PHP License',
+            'groups' => [[
+                'key' => 'group_license',
+                'name' => null,
+                'headings' => [],
+                'shortHeadings' => [],
+                'configs' => [],
+                'note' => $note,
+            ]],
+        ];
+    }
+}
+
+
 $info = pp_parse($raw);
 
 // ── Output complete HTML page ─────────────────────────────────────────
+ob_start();
 ?>
 <!doctype html>
 <html :class="darkMode && 'dark'" x-data="{ darkMode: localStorage.getItem('phpinfo-dark') === 'true' || (!localStorage.getItem('phpinfo-dark') && window.matchMedia('(prefers-color-scheme: dark)').matches) }" class="dark:[color-scheme:dark]">
@@ -520,3 +676,25 @@ ${r?'Expression: "'+r+`"
 </script>
 </body>
 </html>
+<?php
+$html = ob_get_clean();
+
+if (!stream_isatty(STDOUT)) {
+    echo $html;
+    exit;
+}
+
+$file = getcwd() . '/phpinfo.html';
+file_put_contents($file, $html);
+
+$opened = match (PHP_OS_FAMILY) {
+    'Darwin' => !exec('open ' . escapeshellarg($file)),
+    'Linux' => !exec('xdg-open ' . escapeshellarg($file) . ' 2>/dev/null &'),
+    'Windows' => !exec('start "" ' . escapeshellarg($file)),
+    default => false,
+};
+
+fwrite(STDERR, $opened
+    ? "Saved to phpinfo.html and opened in your browser.\n"
+    : "Saved to phpinfo.html\n"
+);

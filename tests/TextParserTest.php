@@ -200,7 +200,7 @@ class TextParserTest extends TestCase
     #[Test]
     public function modules_have_unique_keys(): void
     {
-        $keys = self::info()->modules()->map->key();
+        $keys = self::info()->modules()->map(fn($m) => $m->key());
         $uniqueKeys = $keys->unique();
 
         $this->assertEquals($keys->count(), $uniqueKeys->count());

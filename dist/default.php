@@ -208,7 +208,7 @@
             hash: null,
             mobileNav: false,
             info: <?php echo json_encode($info) ?>,
-            sections: <?php echo json_encode($info->modules()->map->key()->values()) ?>,
+            sections: <?php echo json_encode($info->modules()->map(fn($m) => $m->key())->values()) ?>,
             selected: null,
             selectedIndex: null,
             initialized: false,

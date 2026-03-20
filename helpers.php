@@ -1,5 +1,12 @@
 <?php
 
+if (!function_exists('items')) {
+    function items(iterable $items = []): \STS\Phpinfo\Support\Items
+    {
+        return new \STS\Phpinfo\Support\Items($items);
+    }
+}
+
 if (!function_exists('prettyphpinfo')) {
     /**
      * Display a pretty, searchable phpinfo() page.
