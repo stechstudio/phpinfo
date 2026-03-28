@@ -184,3 +184,28 @@ foreach ($info->modules() as $module) {
     echo '</ul>';
 }
 ```
+
+## Why not just use `ini_get()` or `extension_loaded()`?
+
+PHP scatters its configuration across a handful of narrow functions, each with its own scope:
+
+| Function | What it gives you |
+|---|---|
+| `ini_get()` | A single INI value — and only the local (effective) value |
+| `extension_loaded()` | Whether an extension is loaded (boolean) |
+| `get_loaded_extensions()` | A list of extension names — no configuration details |
+| `phpversion()` | The PHP version string |
+| `php_uname()` | OS info |
+
+Every one of these requires you to **know exactly what you're asking for ahead of time**. There's no way to discover what's available, iterate over all configuration, or search across modules.
+
+And even if you combine all of them, there are things they simply **cannot tell you** — the configure command PHP was compiled with, Zend extension details, stream wrappers, registered filters, and per-extension metadata that only `phpinfo()` exposes.
+
+`phpinfo()` is the **only** function that gives you everything in one place. The problem is it outputs raw HTML (or plain text in CLI) with no API to work with.
+
+This package parses that complete `phpinfo()` output and gives you:
+
+- **Discovery without foreknowledge** — iterate over all modules and configs without knowing what's installed
+- **Both local and master values** — `ini_get()` only returns the effective local value; this package gives you both so you can see what was overridden
+- **Access to phpinfo()-only data** — compile options, stream wrappers, registered filters, and other details that no other PHP function exposes
+- **A single, consistent API** — instead of juggling five different functions with different return types, query everything through one interface
