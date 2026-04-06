@@ -1,5 +1,4 @@
 /build export-ignore
-/resources export-ignore
 /tests export-ignore
 /.github export-ignore
 .gitattributes export-ignore
